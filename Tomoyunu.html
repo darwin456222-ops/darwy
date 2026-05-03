@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tom: İsimli Arena</title>
+    <style>
+        body { margin: 0; background: #050a14; font-family: sans-serif; color: white; overflow: hidden; touch-action: none; user-select: none; }
+        
+        /* SEÇİM EKRANI */
+        #selection-screen { position: fixed; inset: 0; background: #0a0e17; z-index: 2000; display: flex; flex-direction: column; align-items: center; padding-top: 10px; }
+        .selection-container { display: flex; width: 100%; justify-content: space-around; }
+        .p-select-box { width: 45%; border: 2px solid #333; border-radius: 15px; padding: 10px; text-align: center; background: #16213e; }
+        .active-p1 { border-color: #00f2fe; box-shadow: 0 0 10px #00f2fe; }
+        .active-p2 { border-color: #ff0055; box-shadow: 0 0 10px #ff0055; }
+        .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+        .char-item { font-size: 30px; padding: 10px; background: #1c2a4a; border-radius: 10px; }
+
+        /* ARENA */
+        #arena { width: 100%; height: 50vh; background: radial-gradient(circle, #1e3c72, #050a14); position: relative; display: flex; justify-content: center; align-items: flex-end; border-bottom: 3px solid #fff; }
+        .hud { position: absolute; top: 10px; width: 95%; display: flex; justify-content: space-between; }
+        .bar-container { width: 100%; height: 12px; background: #222; border-radius: 6px; margin-bottom: 4px; overflow: hidden; border: 1px solid #444; }
+        .hp-fill { height: 100%; width: 100%; background: #ff0055; transition: width 0.2s; }
+        .sp-fill { height: 100%; width: 0%; background: #00f2fe; transition: width 0.2s; }
+
+        /* KARAKTER VE İSİM ETİKETİ */
+        .char-container { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.1s; pointer-events: none; }
+        .char-tag { background: rgba(0,0,0,0.8); color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 14px; font-weight: bold; margin-bottom: 5px; border: 1px solid #fff; white-space: nowrap; }
+        .emoji { font-size: 70px; }
+
+        #p1-wrap { left: 10%; } 
+        #p2-wrap { right: 10%; }
+        #p2-wrap .emoji { transform: scaleX(-1); }
+
+        /* KONTROLLER */
+        .controls { height: 50vh; display: flex; }
+        .p-area { flex: 1; display: flex; flex-direction: column; }
+        .atk-btn { flex: 3; border: none; font-size: 20px; font-weight: bold; color: white; outline: none; }
+        .ult-btn { flex: 1.5; border: none; font-size: 16px; font-weight: bold; color: white; background: #222; opacity: 0.4; transition: 0.3s; }
+        .ult-ready { background: #00f2fe !important; opacity: 1 !important; color: #000; box-shadow: inset 0 0 15px #fff; }
+
+        #btn-l-atk { background: #1a2a6c; border-right: 1px solid #fff; }
+        #btn-r-atk { background: #b21f1f; }
+
+        /* ANİMASYONLAR */
+        .anim-l { animation: hitL 0.2s; } 
+        .anim-r { animation: hitR 0.2s; }
+        @keyframes hitL { 50% { transform: translateX(60px); } }
+        @keyframes hitR { 50% { transform: translateX(-60px); } }
+        
+        #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; }
+    </style>
+</head>
+<body>
+
+    <div id="selection-screen">
+        <h4>KADRONU KUR</h4>
+        <div class="selection-container">
+            <div id="box-p1" class="p-select-box active-p1">1. OYUNCU<div id="p1-s" style="font-size:30px">?</div><div class="char-grid" id="grid-p1"></div></div>
+            <div id="box-p2" class="p-select-box">2. OYUNCU<div id="p2-s" style="font-size:30px">?</div><div class="char-grid" id="grid-p2"></div></div>
+        </div>
+        <button id="start-btn" onclick="startMatch()" style="margin-top:15px; padding:12px 40px; border-radius:25px; display:none; background:#27ae60; color:white; border:none; font-weight:bold; font-size:18px;">SAVAŞI BAŞLAT</button>
+    </div>
+
+    <div id="win-overlay"><h1 id="win-text"></h1><button onclick="location.reload()" style="padding:15px 40px; border-radius:10px; background:#00f2fe; border:none; font-weight:bold; font-size:18px;">YENİDEN OYNA</button></div>
+
+    <div id="arena">
+        <div class="hud">
+            <div style="width:45%">
+                <div id="n1" style="font-size:12px; font-weight:bold; color:#00f2fe">P1</div>
+                <div class="bar-container"><div id="h1" class="hp-fill"></div></div>
+                <div class="bar-container"><div id="s1" class="sp-fill"></div></div>
+            </div>
+            <div style="width:45%; text-align:right">
+                <div id="n2" style="font-size:12px; font-weight:bold; color:#ff0055">P2</div>
+                <div class="bar-container"><div id="h2" class="hp-fill"></div></div>
+                <div class="bar-container"><div id="s2" class="sp-fill"></div></div>
+            </div>
+        </div>
+
+        <div id="p1-wrap" class="char-container">
+            <div id="name-tag1" class="char-tag">İSİM</div>
+            <div id="p1-emoji" class="emoji"></div>
+        </div>
+        
+        <div id="p2-wrap" class="char-container">
+            <div id="name-tag2" class="char-tag">İSİM</div>
+            <div id="p2-emoji" class="emoji"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="p-area">
+            <button class="atk-btn" id="btn-l-atk">1. OYUNCU</button>
+            <button class="ult-btn" id="btn-l-ult" disabled>GÜÇ DOLUYOR</button>
+        </div>
+        <div class="p-area">
+            <button class="atk-btn" id="btn-r-atk">2. OYUNCU</button>
+            <button class="ult-btn" id="btn-r-ult" disabled>GÜÇ DOLUYOR</button>
+        </div>
+    </div>
+
+    <script>
+        const chars = [
+            {n: "Tom", e: "🐱", u: "SÜPER PENÇE", power: 25}, {n: "Angela", e: "🐈", u: "ŞİFA BÜYÜSÜ", power: -30},
+            {n: "Pierre", e: "🦜", u: "PAPAĞAN ŞOKU", power: 20}, {n: "Hank", e: "🐶", u: "UYKU DARBESİ", power: 18},
+            {n: "Ginger", e: "🐈‍⬛", u: "ŞAKA PATLAMASI", power: 22}, {n: "Rakun", e: "🦝", u: "GİZLİ BOMBA", power: 35}
+        ];
+
+        let p1c = null, p2c = null, hp1 = 100, hp2 = 100, sp1 = 0, sp2 = 0;
+
+        function setupSelection() {
+            const g1 = document.getElementById('grid-p1'), g2 = document.getElementById('grid-p2');
+            chars.forEach((c, i) => {
+                let d1 = document.createElement('div'); d1.className = 'char-item'; d1.innerText = c.e; d1.onclick = () => select(1, i); g1.appendChild(d1);
+                let d2 = document.createElement('div'); d2.className = 'char-item'; d2.innerText = c.e; d2.onclick = () => select(2, i); g2.appendChild(d2);
+            });
+        }
+
+        function select(p, i) {
+            if(p === 1) { p1c = chars[i]; document.getElementById('p1-s').innerText = p1c.e; document.getElementById('box-p1').classList.remove('active-p1'); document.getElementById('box-p2').classList.add('active-p2'); }
+            else { p2c = chars[i]; document.getElementById('p2-s').innerText = p2c.e; }
+            if(p1c && p2c) document.getElementById('start-btn').style.display = 'block';
+        }
+
+        function startMatch() {
+            document.getElementById('selection-screen').style.display = 'none';
+            // İsim etiketlerini güncelle
+            document.getElementById('name-tag1').innerText = p1c.n;
+            document.getElementById('name-tag2').innerText = p2c.n;
+            document.getElementById('p1-emoji').innerText = p1c.e;
+            document.getElementById('p2-emoji').innerText = p2c.e;
+            
+            document.getElementById('n1').innerText = "1. OYUNCU";
+            document.getElementById('n2').innerText = "2. OYUNCU";
+            document.getElementById('btn-l-ult').innerText = p1c.u;
+            document.getElementById('btn-r-ult').innerText = p2c.u;
+            bind();
+        }
+
+        function bind() {
+            const bLa = document.getElementById('btn-l-atk'), bLu = document.getElementById('btn-l-ult');
+            const bRa = document.getElementById('btn-r-atk'), bRu = document.getElementById('btn-r-ult');
+
+            bLa.addEventListener('touchstart', (e) => { e.preventDefault(); action(1, 'atk'); });
+            bLu.addEventListener('touchstart', (e) => { e.preventDefault(); action(1, 'ult'); });
+            bRa.addEventListener('touchstart', (e) => { e.preventDefault(); action(2, 'atk'); });
+            bRu.addEventListener('touchstart', (e) => { e.preventDefault(); action(2, 'ult'); });
+        }
+
+        function action(p, type) {
+            if(hp1 <= 0 || hp2 <= 0) return;
+            if(type === 'atk') {
+                if(p === 1) { hp2 -= 3; sp1 = Math.min(100, sp1 + 10); anim(1); }
+                else { hp1 -= 3; sp2 = Math.min(100, sp2 + 10); anim(2); }
+            } else {
+                if(p === 1 && sp1 >= 100) { 
+                    if(p1c.n === "Angela") hp1 = Math.min(100, hp1 - p1c.power); else hp2 -= p1c.power;
+                    sp1 = 0; anim(1);
+                } else if (p === 2 && sp2 >= 100) {
+                    if(p2c.n === "Angela") hp2 = Math.min(100, hp2 - p2c.power); else hp1 -= p2c.power;
+                    sp2 = 0; anim(2);
+                }
+            }
+            update();
+        }
+
+        function anim(p) {
+            const el = document.getElementById('p' + p + '-wrap');
+            el.classList.remove('anim-l', 'anim-r'); void el.offsetWidth;
+            el.classList.add(p === 1 ? 'anim-l' : 'anim-r');
+        }
+
+        function update() {
+            document.getElementById('h1').style.width = Math.max(0, hp1) + "%";
+            document.getElementById('h2').style.width = Math.max(0, hp2) + "%";
+            document.getElementById('s1').style.width = sp1 + "%";
+            document.getElementById('s2').style.width = sp2 + "%";
+
+            const u1 = document.getElementById('btn-l-ult'), u2 = document.getElementById('btn-r-ult');
+            if(sp1 >= 100) u1.classList.add('ult-ready'); else u1.classList.remove('ult-ready');
+            if(sp2 >= 100) u2.classList.add('ult-ready'); else u2.classList.remove('ult-ready');
+
+            if(hp1 <= 0 || hp2 <= 0) {
+                document.getElementById('win-text').innerText = hp1 <= 0 ? p2c.n + " KAZANDI!" : p1c.n + " KAZANDI!";
+                document.getElementById('win-overlay').style.display = 'flex';
+            }
+        }
+        setupSelection();
+    </script>
+</body>
+</html>

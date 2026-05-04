@@ -3,57 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Savaşları - Multi-Touch Fix</title>
+    <title>Tom Savaşları - Pro Version</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #000; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #000; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
         
-        /* ÜST PANEL */
-        #top-bar { position: fixed; top: 0; width: 100%; background: #222; z-index: 1000; padding: 5px 0; border-bottom: 2px solid #f39c12; text-align: center; }
-        #progress-bg { width: 70%; height: 6px; background: #444; margin: 4px auto; border-radius: 3px; }
-        #progress-fill { height: 100%; width: 0%; background: #f1c40f; transition: 0.5s; }
+        /* ÜST PANEL VE KUPA YOLU */
+        #top-bar { position: fixed; top: 0; width: 100%; background: #222; z-index: 2000; padding: 5px 0; border-bottom: 2px solid #f39c12; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        #progress-bg { width: 70%; height: 8px; background: #444; margin: 4px auto; border-radius: 4px; border: 1px solid #555; }
+        #progress-fill { height: 100%; width: 0%; background: linear-gradient(to right, #f1c40f, #f39c12); transition: 0.5s; border-radius: 4px; }
 
-        /* SEÇİM EKRANI VE IZGARA */
-        #selection { position: fixed; inset: 0; background: #111; z-index: 500; display: none; flex-direction: column; align-items: center; padding-top: 60px; overflow-y: auto; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 95%; padding-bottom: 20px; }
-        .item { background: #222; border: 2px solid #444; border-radius: 8px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-        .item img { width: 70px; height: 70px; object-fit: contain; }
+        /* ANA MENÜ VE SEÇİM EKRANI */
+        #menu, #shop, #selection { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a2a6c, #000); }
+        #selection { background: #111; display: none; padding-top: 70px; overflow-y: auto; justify-content: flex-start; }
+        
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 95%; padding-bottom: 30px; }
+        .item { background: #222; border: 2px solid #444; border-radius: 10px; height: 115px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; transition: 0.2s; }
+        .item img { width: 75px; height: 75px; object-fit: contain; }
         .locked { filter: grayscale(1) brightness(0.3); }
 
-        /* SAVAŞ ALANI */
-        #arena { height: 45vh; background: radial-gradient(circle, #1a2a6c, #000); position: relative; display: none; align-items: flex-end; justify-content: center; }
-        .char-box { width: 120px; height: 120px; display: flex; align-items: flex-end; justify-content: center; position: absolute; bottom: 20px; }
+        /* PROFESYONEL SAVAŞ ALANI (ARENA) */
+        #arena { 
+            height: 48vh; 
+            background-color: #1a1a2a;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(30, 50, 150, 0.4), #000 90%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><g fill-rule="evenodd"><g fill="%239C92AC" fill-opacity="0.08"><path d="M0 40h40V0H0v40zm20-20h20V0H20v20zM0 20h20V0H0v20zm20 40h20V20H20v20z"/></g></g></svg>');
+            position: relative; 
+            display: none; 
+            align-items: flex-end; 
+            justify-content: center;
+            border-bottom: 4px solid #000;
+        }
+
+        .char-box { width: 130px; height: 130px; display: flex; align-items: flex-end; justify-content: center; position: absolute; bottom: 15px; z-index: 5; }
         .char-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        /* KONTROLLER (MULTI-TOUCH UYUMLU) */
-        #ctrl { height: 55vh; display: none; }
-        .side { flex: 1; display: flex; flex-direction: column; }
-        .atk-btn { flex: 2; background: #1a2a6c; color: #fff; font-size: 24px; font-weight: bold; border: 1px solid #000; outline: none; -webkit-tap-highlight-color: transparent; }
-        .ult-btn { flex: 1; background: #444; color: #fff; opacity: 0.3; pointer-events: none; border: 1px solid #000; }
-        .ult-ready { opacity: 1 !important; background: #e74c3c !important; pointer-events: auto !important; box-shadow: inset 0 0 10px #fff; }
+        /* PROFESYONEL HUD VE BARLAR */
+        .hud { position: absolute; top: 65px; width: 92%; display: flex; justify-content: space-between; z-index: 10; }
+        .bar-wrap { width: 135px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 6px; }
+        .b-bg { width: 100%; height: 14px; background: #333; border-radius: 7px; margin-top: 2px; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px #000; }
+        
+        .hp-f { height: 100%; background: linear-gradient(to bottom, #4cd137, #44bd32); width: 100%; transition: 0.3s; box-shadow: 0 0 8px rgba(76, 209, 55, 0.5); }
+        .sp-f { height: 100%; background: linear-gradient(to bottom, #00a8ff, #0097e6); width: 0%; transition: 0.2s; box-shadow: 0 0 5px rgba(0, 168, 255, 0.5); }
+        .hp-critical { background: linear-gradient(to bottom, #e74c3c, #c0392b) !important; }
 
-        /* MENÜ VE DÜKKAN */
-        #menu, #shop { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1a2a6c; }
-        .btn { width: 220px; padding: 15px; margin: 10px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; }
+        /* KONTROLLER */
+        #ctrl { height: 52vh; display: none; }
+        .side { flex: 1; display: flex; flex-direction: column; }
+        .atk-btn { flex: 2; background: #1a2a6c; color: #fff; font-size: 26px; font-weight: bold; border: 1px solid #000; outline: none; -webkit-tap-highlight-color: transparent; }
+        .ult-btn { flex: 1; background: #333; color: #fff; opacity: 0.3; pointer-events: none; border: 1px solid #000; font-weight: bold; }
+        .ult-ready { opacity: 1 !important; background: linear-gradient(#e74c3c, #c0392b) !important; pointer-events: auto !important; box-shadow: inset 0 0 15px #fff; }
+
+        /* BUTONLAR VE DÜKKAN */
+        .btn { width: 220px; padding: 15px; margin: 8px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; box-shadow: 0 4px #000; transition: 0.1s; }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        
+        /* MEGA KUTU ANİMASYONU */
+        @keyframes shake { 0% { transform:rotate(0); } 25% { transform:rotate(5deg); } 50% { transform:rotate(-5deg); } 100% { transform:rotate(0); } }
+        .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
 
 <div id="top-bar">
-    <div style="color:#f1c40f">🏆 <span id="k-txt">0</span></div>
+    <div style="color:#f1c40f; font-weight: bold;">🏆 <span id="k-txt">0</span></div>
     <div id="progress-bg"><div id="progress-fill"></div></div>
-    <small id="n-reward" style="font-size:10px"></small>
+    <small id="n-reward" style="font-size:10px; color: #ccc;"></small>
 </div>
 
 <div id="menu">
-    <h2 style="font-size:32px; margin-bottom:20px;">TOM SAVAŞLARI</h2>
+    <h1 style="font-size:36px; margin-bottom:20px; text-shadow: 2px 2px #000;">TOM SAVAŞLARI</h1>
     <button class="btn" style="background:#2ecc71" onclick="openS(true)">TEK OYUNCU</button>
     <button class="btn" style="background:#3498db" onclick="openS(false)">2 OYUNCU</button>
-    <button class="btn" style="background:#f1c40f; color:#000;" onclick="openShop()">🏪 DÜKKAN</button>
+    <button class="btn" style="background:#f1c40f; color:#000;" onclick="openShop()">🏪 DÜKKAN (SHOP)</button>
 </div>
 
 <div id="shop" style="display:none; background:#111;">
-    <img src="megakutu.jpg" style="width:180px; border-radius:20px; border:4px solid #f1c40f;">
-    <h2 style="color:#f1c40f">MEGA KUTU</h2>
+    <img id="box-img" src="megakutu.jpg" style="width:180px; border-radius:20px; border:4px solid #f1c40f; transition: 0.5s;">
+    <h2 style="color:#f1c40f; text-shadow: 2px 2px #000;">MEGA KUTU</h2>
     <button id="buy-b" class="btn" onclick="buyB()" style="background:#2ecc71">1000 🏆</button>
     <button class="btn" onclick="closeShop()" style="background:#444">GERİ GİT</button>
 </div>
@@ -61,16 +88,16 @@
 <div id="selection"><div class="grid" id="grid"></div></div>
 
 <div id="arena">
-    <div style="position:absolute; top:60px; width:90%; display:flex; justify-content:space-between;">
-        <div style="width:120px;">
-            <div style="height:10px; background:#000; border:1px solid #fff; border-radius:5px; overflow:hidden;"><div id="h1" style="height:100%; background:#2ecc71; width:100%;"></div></div>
-            <div style="height:6px; background:#000; border:1px solid #fff; border-radius:3px; overflow:hidden; margin-top:2px;"><div id="s1" style="height:100%; background:#3498db; width:0%;"></div></div>
-            <span id="name1" style="font-size:10px"></span>
+    <div class="hud">
+        <div class="bar-wrap">
+            <div class="b-bg"><div id="h1" class="hp-f"></div></div>
+            <div class="b-bg" style="height:6px"><div id="s1" class="sp-f"></div></div>
+            <span id="name1" style="font-size:11px; font-weight:bold;"></span>
         </div>
-        <div style="width:120px; text-align:right;">
-            <div style="height:10px; background:#000; border:1px solid #fff; border-radius:5px; overflow:hidden;"><div id="h2" style="height:100%; background:#2ecc71; width:100%;"></div></div>
-            <div style="height:6px; background:#000; border:1px solid #fff; border-radius:3px; overflow:hidden; margin-top:2px;"><div id="s2" style="height:100%; background:#3498db; width:0%;"></div></div>
-            <span id="name2" style="font-size:10px"></span>
+        <div class="bar-wrap" style="text-align:right">
+            <div class="b-bg"><div id="h2" class="hp-f"></div></div>
+            <div class="b-bg" style="height:6px"><div id="s2" class="sp-f"></div></div>
+            <span id="name2" style="font-size:11px; font-weight:bold;"></span>
         </div>
     </div>
     <div class="char-box" style="left:10%"><img id="img1"></div>
@@ -78,14 +105,8 @@
 </div>
 
 <div id="ctrl">
-    <div class="side">
-        <button class="atk-btn" id="btn-atk1">ATAK</button>
-        <button id="u1" class="ult-btn">ULTİ</button>
-    </div>
-    <div class="side" id="p2area">
-        <button class="atk-btn" id="btn-atk2" style="background:#800">ATAK</button>
-        <button id="u2" class="ult-btn">ULTİ</button>
-    </div>
+    <div class="side"><button class="atk-btn" id="atk1">ATAK</button><button id="u1" class="ult-btn">ULTİ</button></div>
+    <div class="side"><button class="atk-btn" id="atk2" style="background:#800">ATAK</button><button id="u2" class="ult-btn">ULTİ</button></div>
 </div>
 
 <script>
@@ -118,7 +139,7 @@
             let lock = !unlocked.includes(n);
             let d = document.createElement('div'); d.className = 'item' + (lock?' locked':'');
             let tr = road.find(r=>r.n===n);
-            d.innerHTML = `<img src="${n.toLowerCase()}.jpg"><p style="font-size:9px">${n}${lock && tr?' ('+tr.k+')':''}</p>`;
+            d.innerHTML = `<img src="${n.toLowerCase()}.jpg"><p style="font-size:10px; margin-top:5px;">${n}${lock && tr?' ('+tr.k+')':''}</p>`;
             if(!lock) d.onclick = () => { if(!p1){p1=n; if(isBot){p2=unlocked[Math.floor(Math.random()*unlocked.length)]; start();} } else {p2=n; start();} };
             g.appendChild(d);
         });
@@ -129,25 +150,26 @@
         document.getElementById('img1').src = p1.toLowerCase()+".jpg"; document.getElementById('img2').src = p2.toLowerCase()+".jpg";
         document.getElementById('name1').innerText = p1; document.getElementById('name2').innerText = p2;
         hp1=100; hp2=100; sp1=0; sp2=0; upHUD();
-        if(isBot) bLoop = setInterval(() => { if(hp1>0 && hp2>0) sp2>=100 ? ult(2) : hit(2); }, 600);
+        if(isBot) bLoop = setInterval(() => { if(hp1>0 && hp2>0) sp2>=100 ? ult(2) : hit(2); }, 650);
     }
 
-    // MULTI-TOUCH FIX: Aynı anda basmayı sağlar
     function hit(p) {
-        if(p===1){ hp2-=7; sp1=Math.min(100, sp1+15); } else { hp1-=7; sp2=Math.min(100, sp2+15); }
+        if(p===1){ hp2-=7; sp1=Math.min(100, sp1+18); } else { hp1-=7; sp2=Math.min(100, sp2+18); }
         upHUD(); check();
     }
 
     function ult(p) {
         let n = (p===1?p1:p2); let d = 30;
         if(n==="Squeak" || n==="Sugar") d=45;
-        if(n==="Blinky"){ d=20; if(p===1) hp1=Math.min(100,hp1+20); else hp2=Math.min(100,hp2+20); }
+        if(n==="Blinky"){ d=22; if(p===1) hp1=Math.min(100,hp1+20); else hp2=Math.min(100,hp2+20); }
         if(p===1){ hp2-=d; sp1=0; } else { hp1-=d; sp2=0; }
         upHUD(); check();
     }
 
     function upHUD() {
-        document.getElementById('h1').style.width=hp1+"%"; document.getElementById('h2').style.width=hp2+"%";
+        const b1 = document.getElementById('h1'), b2 = document.getElementById('h2');
+        b1.style.width=hp1+"%"; b2.style.width=hp2+"%";
+        b1.classList.toggle('hp-critical', hp1<30); b2.classList.toggle('hp-critical', hp2<30);
         document.getElementById('s1').style.width=sp1+"%"; document.getElementById('s2').style.width=sp2+"%";
         document.getElementById('u1').className = sp1>=100 ? "ult-btn ult-ready" : "ult-btn";
         document.getElementById('u2').className = sp2>=100 ? "ult-btn ult-ready" : "ult-btn";
@@ -161,24 +183,39 @@
         }
     }
 
-    // BUTON OLAYLARI (Multi-Touch Desteği)
-    const addAction = (id, p, type) => {
+    // MULTI-TOUCH OLAYLARI
+    const bind = (id, p, type) => {
         const el = document.getElementById(id);
-        const action = () => { if(type==='atk') hit(p); else ult(p); };
-        el.addEventListener('touchstart', (e) => { e.preventDefault(); action(); });
-        el.addEventListener('mousedown', (e) => { action(); });
+        const act = () => { if(type==='atk') hit(p); else ult(p); };
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); act(); });
+        el.addEventListener('mousedown', (e) => { act(); });
     };
+    bind('atk1', 1, 'atk'); bind('atk2', 2, 'atk'); bind('u1', 1, 'ult'); bind('u2', 2, 'ult');
 
-    addAction('btn-atk1', 1, 'atk'); addAction('btn-atk2', 2, 'atk');
-    addAction('u1', 1, 'ult'); addAction('u2', 2, 'ult');
-
-    function openShop() { document.getElementById('shop').style.display='flex'; document.getElementById('buy-b').innerText = kupa>=1000 ? "SATIN AL (1000 🏆)" : "YETERSİZ KUPA"; }
+    // DÜKKAN VE KUTU ANİMASYONU
+    function openShop() { document.getElementById('shop').style.display='flex'; document.getElementById('buy-b').innerText = kupa>=1000 ? "1000 🏆 SATIN AL" : "YETERSİZ KUPA"; }
     function closeShop() { document.getElementById('shop').style.display='none'; }
     function buyB() {
         if(kupa<1000) return;
-        let p = ["Gus","Flip","Squeak","Blinky","Dot","Sugar"].filter(x=>!unlocked.includes(x));
-        if(p.length===0){ alert("Tüm kutu karakterleri açık!"); return; }
-        kupa-=1000; unlocked.push(p[Math.floor(Math.random()*p.length)]); save(); alert("YENİ KARAKTER ÇIKTI!"); location.reload();
+        let pool = ["Gus","Flip","Squeak","Blinky","Dot","Sugar"].filter(x=>!unlocked.includes(x));
+        if(pool.length===0){ alert("Tüm kutu karakterleri açık!"); return; }
+        
+        const box = document.getElementById('box-img');
+        kupa -= 1000; save();
+        box.classList.add('shaking');
+
+        setTimeout(() => {
+            box.classList.remove('shaking');
+            box.style.transform = "scale(2)";
+            box.style.opacity = "0";
+            
+            setTimeout(() => {
+                let won = pool[Math.floor(Math.random()*pool.length)];
+                unlocked.push(won); save();
+                alert("🎉 TEBRİKLER! 🎉\n\nMEGA KUTUDAN " + won.toUpperCase() + " ÇIKTI!");
+                location.reload();
+            }, 500);
+        }, 1500);
     }
     updateUI();
 </script>

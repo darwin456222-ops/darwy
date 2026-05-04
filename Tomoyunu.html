@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom ve Arkadaşları - Buton Düzenlemesi</title>
+    <title>Tom ve Arkadaşları - Hızlı Bot Modu</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #111; color: white; touch-action: none; user-select: none; overflow: hidden; }
-        
+
+        /* ANA MENÜ STİLLERİ */
+        #main-menu {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #1f4037 0%, #99f2c8 100%);
+            z-index: 3000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
+        }
+        #main-menu h1 { font-size: 40px; color: #fff; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); margin-bottom: 50px; }
+        .menu-btn {
+            width: 80%; max-width: 300px; padding: 15px; margin: 10px;
+            font-size: 20px; font-weight: bold; color: white;
+            background: #2c3e50; border: 3px solid #fff; border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.2s;
+        }
+        .menu-btn:active { transform: scale(0.95); }
+
         /* MODERN GRID SEÇİM EKRANI */
         #selection-screen { 
             position: fixed; inset: 0; 
-            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%); 
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); 
             z-index: 2000; padding: 20px; text-align: center; 
-            display: flex; flex-direction: column; align-items: center; overflow-y: auto; 
+            display: none; flex-direction: column; align-items: center; overflow-y: auto; 
         }
         .char-grid { 
             display: grid; 
@@ -20,62 +37,59 @@
             gap: 12px; width: 100%; max-width: 450px; margin-top: 15px;
         }
         .char-item { 
-            background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 15px; 
+            background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 15px; 
             border: 2px solid #555; transition: 0.2s; display: flex; flex-direction: column; align-items: center;
         }
         .char-item:active { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; transform: scale(0.9); }
-        .char-item span { font-size: 45px; margin-bottom: 5px; }
-        .char-item p { margin: 0; font-size: 14px; font-weight: bold; color: #fff; }
+        .char-item img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; margin-bottom: 5px; background: #333; }
+        .char-item p { margin: 0; font-size: 13px; font-weight: bold; color: #fff; }
 
         /* ARENA VE CAN BARLARI */
         #arena { width: 100%; height: 50vh; background: radial-gradient(circle, #1e3c72, #050a14); position: relative; display: flex; justify-content: center; align-items: flex-end; border-bottom: 4px solid #fff; }
         .hud { position: absolute; top: 35px; width: 92%; display: flex; justify-content: space-between; z-index: 100; }
-        .bar-container { width: 160px; height: 20px; background: #000; border-radius: 10px; border: 2px solid #fff; overflow: hidden; margin-bottom: 5px; }
+        .bar-container { width: 150px; height: 18px; background: #000; border-radius: 9px; border: 2px solid #fff; overflow: hidden; margin-bottom: 5px; }
         .hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.2s; }
         .sp-fill { height: 100%; width: 0%; background: #00f2fe; transition: width 0.2s; }
-        
-        .char-container { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-        .emoji { font-size: 85px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
-        #p1-wrap { left: 10%; } #p2-wrap { right: 10%; }
-        #p2-wrap .emoji { transform: scaleX(-1); }
 
-        /* KONTROLLER - TAM DENGELENMİŞ */
+        .char-container { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
+        .char-img { width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        #p1-wrap { left: 8%; } 
+        #p2-wrap { right: 8%; transform: scaleX(-1); }
+
+        /* KONTROLLER */
         #controls { height: 50vh; display: flex; background: #000; }
         .p-area { flex: 1; display: flex; flex-direction: column; height: 100%; }
-        
-        .atk-btn { 
-            flex: 3; /* Alanın büyük kısmını kaplar */
-            border: none; font-size: 24px; font-weight: 900; color: white; outline: none; 
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .ult-btn { 
-            flex: 1.5; /* Alt kısımda yeterli alan kaplar */
-            border: none; font-size: 18px; font-weight: bold; color: white; 
-            background: #222; opacity: 0.5; border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .ult-ready { 
-            background: #f1c40f !important; opacity: 1 !important; color: #000 !important; 
-            box-shadow: inset 0 0 20px #fff, 0 0 15px #f1c40f; 
-        }
+        .atk-btn { flex: 3; border: none; font-size: 24px; font-weight: 900; color: white; outline: none; border: 1px solid rgba(255,255,255,0.1); }
+        .ult-btn { flex: 1.5; border: none; font-size: 16px; font-weight: bold; color: white; background: #222; opacity: 0.5; border: 1px solid rgba(255,255,255,0.1); }
+        .ult-ready { background: #f1c40f !important; opacity: 1 !important; color: #000 !important; box-shadow: inset 0 0 20px #fff, 0 0 15px #f1c40f; }
 
         #btn-1-atk { background: #1a2a6c; }
-        #btn-2-atk { background: #b21f1f; } /* Sağ taraftaki saldırı rengi */
+        #btn-2-atk { background: #b21f1f; }
 
+        /* ANİMASYONLAR */
         .anim-1 { animation: hitL 0.2s; }
         .anim-2 { animation: hitR 0.2s; }
         @keyframes hitL { 50% { transform: translateX(60px); } }
-        @keyframes hitR { 50% { transform: translateX(-60px); } }
+        @keyframes hitR { 
+            0% { transform: scaleX(-1) translateX(0); }
+            50% { transform: scaleX(-1) translateX(60px); }
+            100% { transform: scaleX(-1) translateX(0); }
+        }
 
-        #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; }
+        #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
         #start-btn { margin-top: 20px; padding: 15px 40px; font-size: 20px; background: #27ae60; color: white; border: none; border-radius: 30px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div id="main-menu">
+    <h1>Tom ve Arkadaşları</h1>
+    <button class="menu-btn" onclick="openSelection(true)">1 Oyunculu Mod</button>
+    <button class="menu-btn" onclick="openSelection(false)">2 Oyunculu Mod</button>
+</div>
+
 <div id="selection-screen">
-    <h1 style="color:#00f2fe; margin: 0;">KARAKTER SEÇ</h1>
+    <h1 id="selection-title" style="color:#00f2fe; margin: 0;">KARAKTERİNİ SEÇ</h1>
     <h3 id="info-text" style="margin: 10px 0;">1. Oyuncu Seçimi</h3>
     <div class="char-grid" id="grid"></div>
     <button id="start-btn" onclick="startMatch()">SAVAŞI BAŞLAT</button>
@@ -84,18 +98,18 @@
 <div id="arena">
     <div class="hud">
         <div>
-            <div id="n1" style="font-weight:bold; font-size: 16px; text-shadow: 1px 1px 2px #000;">P1</div>
+            <div id="n1" style="font-weight:bold; font-size: 14px;">P1</div>
             <div class="bar-container"><div id="h1" class="hp-fill"></div></div>
             <div class="bar-container"><div id="s1" class="sp-fill"></div></div>
         </div>
         <div style="text-align:right">
-            <div id="n2" style="font-weight:bold; font-size: 16px; text-shadow: 1px 1px 2px #000;">P2</div>
+            <div id="n2" style="font-weight:bold; font-size: 14px;">P2</div>
             <div class="bar-container" style="margin-left:auto"><div id="h2" class="hp-fill"></div></div>
             <div class="bar-container" style="margin-left:auto"><div id="s2" class="sp-fill"></div></div>
         </div>
     </div>
-    <div id="p1-wrap" class="char-container"><div class="emoji" id="e1"></div></div>
-    <div id="p2-wrap" class="char-container"><div class="emoji" id="e2"></div></div>
+    <div id="p1-wrap" class="char-container"><img class="char-img" id="img1"></div>
+    <div id="p2-wrap" class="char-container"><img class="char-img" id="img2"></div>
 </div>
 
 <div id="controls">
@@ -103,7 +117,7 @@
         <button class="atk-btn" id="btn-1-atk">SALDIRI</button>
         <button class="ult-btn" id="btn-1-ult">ULTİ</button>
     </div>
-    <div class="p-area">
+    <div class="p-area" id="p2-controls">
         <button class="atk-btn" id="btn-2-atk">SALDIRI</button>
         <button class="ult-btn" id="btn-2-ult">ULTİ</button>
     </div>
@@ -116,37 +130,57 @@
 
 <script>
     const chars = [
-        {n: "Tom", e: "🐱", u: "PENÇE", power: 12}, 
-        {n: "Angela", e: "🐈", u: "ŞİFA", power: 10}, 
-        {n: "Pierre", e: "🦜", u: "SES", power: 11}, 
-        {n: "Hank", e: "🐶", u: "KEMİK", power: 9},
-        {n: "Ginger", e: "🐈‍⬛", u: "FİŞEK", power: 11}, 
-        {n: "Roy", e: "🦝🕶️", u: "SOYGUN", power: 14},
-        {n: "Ben", e: "🐶🧪", u: "İCAT", power: 13},
-        {n: "Becca", e: "🐰🎤", u: "KONSER", power: 12},
-        {n: "Gina", e: "🦒✨", u: "YILDIZ", power: 11},
-        {n: "Santi", e: "🐐", u: "TEKME", power: 12}
+        {n: "Tom", e: "tom.jpg", u: "PENÇE", p: 14}, 
+        {n: "Angela", e: "angela.jpg", u: "ŞİFA", p: 11}, 
+        {n: "Hank", e: "hank.jpg", u: "KEMİK", p: 12},
+        {n: "Ginger", e: "ginger.jpg", u: "FİŞEK", p: 13}, 
+        {n: "Ben", e: "ben.jpg", u: "İCAT", p: 13},
+        {n: "Becca", e: "becca.jpg", u: "ROCK", p: 12},
+        {n: "Roy", e: "roy.jpg", u: "SOYGUN", p: 15},
+        {n: "Hippo", e: "hippo.jpg", u: "AĞIR SIKLET", p: 14},
+        {n: "Ginna", e: "ginna.jpg", u: "UZUN BOYUN", p: 10},
+        {n: "Gus", e: "gus.jpg", u: "MOR KABUS", p: 16},
+        {n: "Flip", e: "flip.jpg", u: "AKIL OYUNU", p: 12},
+        {n: "Squeak", e: "squeak.jpg", u: "NEŞELİ ÇIĞLIK", p: 13},
+        {n: "Blinky", e: "blinky.jpg", u: "TEK GÖZ", p: 14},
+        {n: "Dot", e: "dot.jpg", u: "FİKİR IŞIĞI", p: 13},
+        {n: "Sugar", e: "sugar.jpg", u: "GÖKKUŞAĞI", p: 12}
     ];
 
-    let p1c = null, p2c = null, hp1 = 200, hp2 = 200, maxHp = 200, sp1 = 0, sp2 = 0;
+    let p1c = null, p2c = null, hp1 = 200, hp2 = 200, maxHp = 200, sp1 = 0, sp2 = 0, isBot = false;
+    let botTimer = null;
 
     function setup() {
         const grid = document.getElementById('grid');
         chars.forEach((c, i) => {
             let d = document.createElement('div');
             d.className = 'char-item';
-            d.innerHTML = `<span>${c.e}</span><p>${c.n}</p>`;
+            d.innerHTML = `<img src="${c.e}"><p>${c.n}</p>`;
             d.onclick = () => select(i);
             grid.appendChild(d);
         });
     }
 
+    function openSelection(botMode) {
+        isBot = botMode;
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('selection-screen').style.display = 'flex';
+    }
+
     function select(i) {
         if(!p1c) {
             p1c = chars[i];
-            document.getElementById('info-text').innerText = "2. Oyuncu Seçimi";
-            document.getElementById('info-text').style.color = "#ff4757";
-        } else if(!p2c) {
+            if(isBot) {
+                let randomIndex = Math.floor(Math.random() * chars.length);
+                p2c = chars[randomIndex];
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('info-text').innerText = "Bot Rakip: " + p2c.n;
+                document.getElementById('info-text').style.color = "#2ecc71";
+            } else {
+                document.getElementById('info-text').innerText = "2. Oyuncu Seçimi";
+                document.getElementById('info-text').style.color = "#ff4757";
+            }
+        } else if(!p2c && !isBot) {
             p2c = chars[i];
             document.getElementById('start-btn').style.display = 'inline-block';
             document.getElementById('info-text').innerText = "HAZIR!";
@@ -157,12 +191,19 @@
     function startMatch() {
         document.getElementById('selection-screen').style.display = 'none';
         document.getElementById('n1').innerText = p1c.n;
-        document.getElementById('n2').innerText = p2c.n;
-        document.getElementById('e1').innerText = p1c.e;
-        document.getElementById('e2').innerText = p2c.e;
+        document.getElementById('n2').innerText = isBot ? p2c.n + " (BOT)" : p2c.n;
+        document.getElementById('img1').src = p1c.e;
+        document.getElementById('img2').src = p2c.e;
         document.getElementById('btn-1-ult').innerText = p1c.u;
         document.getElementById('btn-2-ult').innerText = p2c.u;
-        
+
+        if(isBot) {
+            document.getElementById('p2-controls').style.opacity = "0.3";
+            document.getElementById('p2-controls').style.pointerEvents = "none";
+            // Bot döngüsü: Her 400ms'de bir kontrol eder
+            botTimer = setInterval(botLogic, 400); 
+        }
+
         const btns = [
             {id:'btn-1-atk', p:1, t:'atk'}, {id:'btn-1-ult', p:1, t:'ult'},
             {id:'btn-2-atk', p:2, t:'atk'}, {id:'btn-2-ult', p:2, t:'ult'}
@@ -174,19 +215,27 @@
         });
     }
 
+    function botLogic() {
+        if(hp1 <= 0 || hp2 <= 0) { clearInterval(botTimer); return; }
+        
+        // %10 şansla bot bazen bekler (daha doğal görünmesi için)
+        if(Math.random() > 0.9) return;
+
+        if(sp2 >= 100) action(2, 'ult');
+        else action(2, 'atk');
+    }
+
     function action(p, type) {
         if(hp1 <= 0 || hp2 <= 0) return;
         if(type === 'atk') {
-            if(p === 1) { hp2 -= p1c.power; sp1 = Math.min(100, sp1 + 15); anim(1); }
-            else { hp1 -= p2c.power; sp2 = Math.min(100, sp2 + 15); anim(2); }
+            if(p === 1) { hp2 -= p1c.p; sp1 = Math.min(100, sp1 + 20); anim(1); }
+            else { hp1 -= p2c.p; sp2 = Math.min(100, sp2 + 20); anim(2); }
         } else {
             if(p === 1 && sp1 >= 100) {
-                if(p1c.n === "Angela") hp1 = Math.min(maxHp, hp1 + 60);
-                else hp2 -= p1c.power * 2.5;
+                if(p1c.n === "Angela") hp1 = Math.min(maxHp, hp1 + 50); else hp2 -= 45;
                 sp1 = 0; anim(1);
             } else if(p === 2 && sp2 >= 100) {
-                if(p2c.n === "Angela") hp2 = Math.min(maxHp, hp2 + 60);
-                else hp1 -= p2c.power * 2.5;
+                if(p2c.n === "Angela") hp2 = Math.min(maxHp, hp2 + 50); else hp1 -= 45;
                 sp2 = 0; anim(2);
             }
         }
@@ -205,12 +254,13 @@
         document.getElementById('h2').style.width = (Math.max(0, hp2) / maxHp * 100) + "%";
         document.getElementById('s1').style.width = sp1 + "%";
         document.getElementById('s2').style.width = sp2 + "%";
-        
+
         const u1 = document.getElementById('btn-1-ult'), u2 = document.getElementById('btn-2-ult');
         if(sp1 >= 100) u1.classList.add('ult-ready'); else u1.classList.remove('ult-ready');
         if(sp2 >= 100) u2.classList.add('ult-ready'); else u2.classList.remove('ult-ready');
 
         if(hp1 <= 0 || hp2 <= 0) {
+            clearInterval(botTimer);
             document.getElementById('win-overlay').style.display = 'flex';
             document.getElementById('win-text').innerText = hp1 <= 0 ? p2c.n + " KAZANDI!" : p1c.n + " KAZANDI!";
         }

@@ -3,67 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Oyunu - Klasik Stil</title>
+    <title>Tom ve Arkadaşları - Buton Düzenlemesi</title>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background: #111; color: white; touch-action: none; user-select: none; }
+        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #111; color: white; touch-action: none; user-select: none; overflow: hidden; }
         
-        /* SEVDİĞİN KLASİK SEÇİM EKRANI */
-        #selection-screen { position: fixed; inset: 0; background: #222; z-index: 2000; padding: 20px; text-align: center; overflow-y: auto; }
-        .char-item { background: #333; padding: 15px; margin: 12px auto; border-radius: 12px; width: 85%; max-width: 350px; cursor: pointer; border: 3px solid #555; display: flex; align-items: center; justify-content: center; gap: 20px; }
-        .char-item:active { background: #444; border-color: #00f2fe; transform: scale(0.95); }
-        .char-item span { font-size: 40px; }
-        .char-item p { margin: 0; font-size: 20px; font-weight: bold; }
+        /* MODERN GRID SEÇİM EKRANI */
+        #selection-screen { 
+            position: fixed; inset: 0; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%); 
+            z-index: 2000; padding: 20px; text-align: center; 
+            display: flex; flex-direction: column; align-items: center; overflow-y: auto; 
+        }
+        .char-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; width: 100%; max-width: 450px; margin-top: 15px;
+        }
+        .char-item { 
+            background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 15px; 
+            border: 2px solid #555; transition: 0.2s; display: flex; flex-direction: column; align-items: center;
+        }
+        .char-item:active { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; transform: scale(0.9); }
+        .char-item span { font-size: 45px; margin-bottom: 5px; }
+        .char-item p { margin: 0; font-size: 14px; font-weight: bold; color: #fff; }
 
+        /* ARENA VE CAN BARLARI */
         #arena { width: 100%; height: 50vh; background: radial-gradient(circle, #1e3c72, #050a14); position: relative; display: flex; justify-content: center; align-items: flex-end; border-bottom: 4px solid #fff; }
-        
-        /* CAN BARLARI (GÖRÜNÜR HALE GETİRİLDİ) */
-        .hud { position: absolute; top: 40px; width: 92%; display: flex; justify-content: space-between; z-index: 100; }
-        .bar-container { width: 160px; height: 18px; background: #000; border-radius: 9px; border: 2px solid #fff; overflow: hidden; margin-bottom: 6px; }
-        .hp-fill { height: 100%; width: 100%; background: #ff0055; transition: width 0.2s; }
+        .hud { position: absolute; top: 35px; width: 92%; display: flex; justify-content: space-between; z-index: 100; }
+        .bar-container { width: 160px; height: 20px; background: #000; border-radius: 10px; border: 2px solid #fff; overflow: hidden; margin-bottom: 5px; }
+        .hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.2s; }
         .sp-fill { height: 100%; width: 0%; background: #00f2fe; transition: width 0.2s; }
         
         .char-container { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-        .emoji { font-size: 80px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        .emoji { font-size: 85px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
         #p1-wrap { left: 10%; } #p2-wrap { right: 10%; }
         #p2-wrap .emoji { transform: scaleX(-1); }
 
-        /* KONTROLLER */
-        #controls { height: 50vh; display: flex; }
-        .p-area { flex: 1; display: flex; flex-direction: column; }
-        .atk-btn { flex: 2.5; border: none; font-size: 24px; font-weight: 900; color: white; outline: none; border: 1px solid #000; }
-        .ult-btn { flex: 1.5; border: none; font-size: 18px; font-weight: bold; color: white; background: #222; opacity: 0.4; border: 1px solid #000; }
-        .ult-ready { background: #ff4757 !important; opacity: 1 !important; box-shadow: 0 0 15px #ff4757; }
+        /* KONTROLLER - TAM DENGELENMİŞ */
+        #controls { height: 50vh; display: flex; background: #000; }
+        .p-area { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        
+        .atk-btn { 
+            flex: 3; /* Alanın büyük kısmını kaplar */
+            border: none; font-size: 24px; font-weight: 900; color: white; outline: none; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .ult-btn { 
+            flex: 1.5; /* Alt kısımda yeterli alan kaplar */
+            border: none; font-size: 18px; font-weight: bold; color: white; 
+            background: #222; opacity: 0.5; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ult-ready { 
+            background: #f1c40f !important; opacity: 1 !important; color: #000 !important; 
+            box-shadow: inset 0 0 20px #fff, 0 0 15px #f1c40f; 
+        }
 
         #btn-1-atk { background: #1a2a6c; }
-        #btn-2-atk { background: #b21f1f; }
+        #btn-2-atk { background: #b21f1f; } /* Sağ taraftaki saldırı rengi */
 
         .anim-1 { animation: hitL 0.2s; }
         .anim-2 { animation: hitR 0.2s; }
-        @keyframes hitL { 50% { transform: translateX(70px); } }
-        @keyframes hitR { 50% { transform: translateX(-70px); } }
+        @keyframes hitL { 50% { transform: translateX(60px); } }
+        @keyframes hitR { 50% { transform: translateX(-60px); } }
 
         #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; }
-        #start-btn { margin-top: 15px; padding: 15px 45px; font-size: 22px; background: #27ae60; color: white; border: none; border-radius: 40px; display: none; font-weight: bold; }
+        #start-btn { margin-top: 20px; padding: 15px 40px; font-size: 20px; background: #27ae60; color: white; border: none; border-radius: 30px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="selection-screen">
-    <h1 style="color:#00f2fe; margin-bottom: 5px;">Karakter Seç</h1>
-    <h3 id="info-text">1. Oyuncu Seçiyor</h3>
-    <div id="grid"></div>
-    <button id="start-btn" onclick="startMatch()">SAVAŞI BAŞLAT!</button>
+    <h1 style="color:#00f2fe; margin: 0;">KARAKTER SEÇ</h1>
+    <h3 id="info-text" style="margin: 10px 0;">1. Oyuncu Seçimi</h3>
+    <div class="char-grid" id="grid"></div>
+    <button id="start-btn" onclick="startMatch()">SAVAŞI BAŞLAT</button>
 </div>
 
 <div id="arena">
     <div class="hud">
         <div>
-            <div id="n1" style="font-weight:bold; text-shadow: 1px 1px 3px #000;">P1</div>
+            <div id="n1" style="font-weight:bold; font-size: 16px; text-shadow: 1px 1px 2px #000;">P1</div>
             <div class="bar-container"><div id="h1" class="hp-fill"></div></div>
             <div class="bar-container"><div id="s1" class="sp-fill"></div></div>
         </div>
         <div style="text-align:right">
-            <div id="n2" style="font-weight:bold; text-shadow: 1px 1px 3px #000;">P2</div>
+            <div id="n2" style="font-weight:bold; font-size: 16px; text-shadow: 1px 1px 2px #000;">P2</div>
             <div class="bar-container" style="margin-left:auto"><div id="h2" class="hp-fill"></div></div>
             <div class="bar-container" style="margin-left:auto"><div id="s2" class="sp-fill"></div></div>
         </div>
@@ -85,24 +111,24 @@
 
 <div id="win-overlay">
     <h1 id="win-text">KAZANDIN!</h1>
-    <button onclick="location.reload()" style="padding:15px 30px; font-size:18px; border-radius:10px; background:#f39c12; color:white; border:none;">Yeniden Başlat</button>
+    <button onclick="location.reload()" style="padding:15px 30px; font-size:18px; border-radius:10px; background:#f39c12; color:white; border:none;">Tekrar Oyna</button>
 </div>
 
 <script>
     const chars = [
-        {n: "Tom", e: "🐱", u: "PENÇE", power: 25}, 
-        {n: "Angela", e: "🐈", u: "ŞİFA", power: -35},
-        {n: "Pierre", e: "🦜", u: "SES", power: 22}, 
-        {n: "Hank", e: "🐶", u: "KEMİK", power: 20},
-        {n: "Ginger", e: "🐈‍⬛", u: "FİŞEK", power: 24}, 
-        {n: "Roy", e: "🦝🕶️", u: "SOYGUN", power: 32},
-        {n: "Ben", e: "🐶🧪", u: "İCAT", power: 30},
-        {n: "Becca", e: "🐰🎤", u: "KONSER", power: 28},
-        {n: "Gina", e: "🦒✨", u: "YILDIZ", power: 26},
-        {n: "Santi", e: "🐐", u: "TEKME", power: 27}
+        {n: "Tom", e: "🐱", u: "PENÇE", power: 12}, 
+        {n: "Angela", e: "🐈", u: "ŞİFA", power: 10}, 
+        {n: "Pierre", e: "🦜", u: "SES", power: 11}, 
+        {n: "Hank", e: "🐶", u: "KEMİK", power: 9},
+        {n: "Ginger", e: "🐈‍⬛", u: "FİŞEK", power: 11}, 
+        {n: "Roy", e: "🦝🕶️", u: "SOYGUN", power: 14},
+        {n: "Ben", e: "🐶🧪", u: "İCAT", power: 13},
+        {n: "Becca", e: "🐰🎤", u: "KONSER", power: 12},
+        {n: "Gina", e: "🦒✨", u: "YILDIZ", power: 11},
+        {n: "Santi", e: "🐐", u: "TEKME", power: 12}
     ];
 
-    let p1c = null, p2c = null, hp1 = 100, hp2 = 100, sp1 = 0, sp2 = 0;
+    let p1c = null, p2c = null, hp1 = 200, hp2 = 200, maxHp = 200, sp1 = 0, sp2 = 0;
 
     function setup() {
         const grid = document.getElementById('grid');
@@ -118,13 +144,13 @@
     function select(i) {
         if(!p1c) {
             p1c = chars[i];
-            document.getElementById('info-text').innerText = "2. Oyuncu Seçiyor";
-            document.getElementById('info-text').style.color = "#ff0055";
+            document.getElementById('info-text').innerText = "2. Oyuncu Seçimi";
+            document.getElementById('info-text').style.color = "#ff4757";
         } else if(!p2c) {
             p2c = chars[i];
             document.getElementById('start-btn').style.display = 'inline-block';
-            document.getElementById('info-text').innerText = "KADRO HAZIR!";
-            document.getElementById('info-text').style.color = "#27ae60";
+            document.getElementById('info-text').innerText = "HAZIR!";
+            document.getElementById('info-text').style.color = "#2ecc71";
         }
     }
 
@@ -155,12 +181,12 @@
             else { hp1 -= p2c.power; sp2 = Math.min(100, sp2 + 15); anim(2); }
         } else {
             if(p === 1 && sp1 >= 100) {
-                if(p1c.n === "Angela") hp1 = Math.min(100, hp1 + 40);
-                else hp2 -= p1c.power * 2.2;
+                if(p1c.n === "Angela") hp1 = Math.min(maxHp, hp1 + 60);
+                else hp2 -= p1c.power * 2.5;
                 sp1 = 0; anim(1);
             } else if(p === 2 && sp2 >= 100) {
-                if(p2c.n === "Angela") hp2 = Math.min(100, hp2 + 40);
-                else hp1 -= p2c.power * 2.2;
+                if(p2c.n === "Angela") hp2 = Math.min(maxHp, hp2 + 60);
+                else hp1 -= p2c.power * 2.5;
                 sp2 = 0; anim(2);
             }
         }
@@ -175,8 +201,8 @@
     }
 
     function update() {
-        document.getElementById('h1').style.width = Math.max(0, hp1) + "%";
-        document.getElementById('h2').style.width = Math.max(0, hp2) + "%";
+        document.getElementById('h1').style.width = (Math.max(0, hp1) / maxHp * 100) + "%";
+        document.getElementById('h2').style.width = (Math.max(0, hp2) / maxHp * 100) + "%";
         document.getElementById('s1').style.width = sp1 + "%";
         document.getElementById('s2').style.width = sp2 + "%";
         

@@ -3,167 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Savaşları - Resim Yüklemeli</title>
+    <title>Tom Savaşları - Multi-Touch Fix</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #111; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
+        body { margin: 0; font-family: sans-serif; background: #000; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
         
-        /* Resim Hazırlama Ekranı */
-        #setup-screen { position: fixed; inset: 0; background: #222; z-index: 6000; overflow-y: auto; padding: 20px; text-align: center; }
-        .upload-row { display: flex; justify-content: space-between; align-items: center; background: #333; margin: 5px; padding: 10px; border-radius: 8px; }
-        
-        /* Ana Menü */
-        #menu { position: fixed; inset: 0; background: #1a2a6c; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .btn { width: 250px; padding: 20px; margin: 10px; border-radius: 50px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; }
+        /* ÜST PANEL */
+        #top-bar { position: fixed; top: 0; width: 100%; background: #222; z-index: 1000; padding: 5px 0; border-bottom: 2px solid #f39c12; text-align: center; }
+        #progress-bg { width: 70%; height: 6px; background: #444; margin: 4px auto; border-radius: 3px; }
+        #progress-fill { height: 100%; width: 0%; background: #f1c40f; transition: 0.5s; }
 
-        /* Seçim Ekranı */
-        #selection { position: fixed; inset: 0; background: #111; z-index: 4000; display: none; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 400px; }
-        .item { background: #222; border: 2px solid #444; border-radius: 10px; padding: 5px; text-align: center; }
-        .item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 5px; }
+        /* SEÇİM EKRANI VE IZGARA */
+        #selection { position: fixed; inset: 0; background: #111; z-index: 500; display: none; flex-direction: column; align-items: center; padding-top: 60px; overflow-y: auto; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 95%; padding-bottom: 20px; }
+        .item { background: #222; border: 2px solid #444; border-radius: 8px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        .item img { width: 70px; height: 70px; object-fit: contain; }
+        .locked { filter: grayscale(1) brightness(0.3); }
 
-        /* Savaş Alanı */
-        #arena { height: 45vh; background: radial-gradient(circle, #004e92, #000); position: relative; border-bottom: 2px solid #fff; }
-        .hp-bar { width: 120px; height: 15px; background: #333; border: 1px solid #fff; }
-        .hp-fill { height: 100%; background: #0f0; width: 100%; }
-        .player-img { width: 110px; height: 110px; object-fit: contain; }
+        /* SAVAŞ ALANI */
+        #arena { height: 45vh; background: radial-gradient(circle, #1a2a6c, #000); position: relative; display: none; align-items: flex-end; justify-content: center; }
+        .char-box { width: 120px; height: 120px; display: flex; align-items: flex-end; justify-content: center; position: absolute; bottom: 20px; }
+        .char-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        /* Kontroller */
-        #ctrl { height: 55vh; display: flex; }
+        /* KONTROLLER (MULTI-TOUCH UYUMLU) */
+        #ctrl { height: 55vh; display: none; }
         .side { flex: 1; display: flex; flex-direction: column; }
-        .atk { flex: 3; background: #1a2a6c; color: #fff; font-size: 24px; border: 1px solid #000; }
-        .ult { flex: 1; background: #444; color: #fff; opacity: 0.3; }
-        .ready { opacity: 1; background: #f00 !important; }
+        .atk-btn { flex: 2; background: #1a2a6c; color: #fff; font-size: 24px; font-weight: bold; border: 1px solid #000; outline: none; -webkit-tap-highlight-color: transparent; }
+        .ult-btn { flex: 1; background: #444; color: #fff; opacity: 0.3; pointer-events: none; border: 1px solid #000; }
+        .ult-ready { opacity: 1 !important; background: #e74c3c !important; pointer-events: auto !important; box-shadow: inset 0 0 10px #fff; }
+
+        /* MENÜ VE DÜKKAN */
+        #menu, #shop { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1a2a6c; }
+        .btn { width: 220px; padding: 15px; margin: 10px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div id="setup-screen">
-    <h2>Önce Resimleri Seç</h2>
-    <p>Telefonundaki fotoğrafları isimlerine göre eşleştir:</p>
-    <div id="upload-list"></div>
-    <button class="btn" style="background:#2ecc71; width: 100%;" onclick="finishSetup()">OYUNA BAŞLA</button>
+<div id="top-bar">
+    <div style="color:#f1c40f">🏆 <span id="k-txt">0</span></div>
+    <div id="progress-bg"><div id="progress-fill"></div></div>
+    <small id="n-reward" style="font-size:10px"></small>
 </div>
 
 <div id="menu">
-    <h1>TOM & FRIENDS</h1>
-    <button class="btn" style="background:#2ecc71" onclick="go(true)">1 OYUNCULU (BOT)</button>
-    <button class="btn" style="background:#3498db" onclick="go(false)">2 OYUNCULU</button>
+    <h2 style="font-size:32px; margin-bottom:20px;">TOM SAVAŞLARI</h2>
+    <button class="btn" style="background:#2ecc71" onclick="openS(true)">TEK OYUNCU</button>
+    <button class="btn" style="background:#3498db" onclick="openS(false)">2 OYUNCU</button>
+    <button class="btn" style="background:#f1c40f; color:#000;" onclick="openShop()">🏪 DÜKKAN</button>
 </div>
 
-<div id="selection">
-    <h2 id="msg">KARAKTER SEÇ</h2>
-    <div class="grid" id="grid"></div>
+<div id="shop" style="display:none; background:#111;">
+    <img src="megakutu.jpg" style="width:180px; border-radius:20px; border:4px solid #f1c40f;">
+    <h2 style="color:#f1c40f">MEGA KUTU</h2>
+    <button id="buy-b" class="btn" onclick="buyB()" style="background:#2ecc71">1000 🏆</button>
+    <button class="btn" onclick="closeShop()" style="background:#444">GERİ GİT</button>
 </div>
+
+<div id="selection"><div class="grid" id="grid"></div></div>
 
 <div id="arena">
-    <div style="position:absolute; top:10px; width:100%; display:flex; justify-content:space-around;">
-        <div>HP<div class="hp-bar"><div id="h1" class="hp-fill"></div></div><b id="n1"></b></div>
-        <div style="text-align:right">HP<div class="hp-bar"><div id="h2" class="hp-fill"></div></div><b id="n2"></b></div>
+    <div style="position:absolute; top:60px; width:90%; display:flex; justify-content:space-between;">
+        <div style="width:120px;">
+            <div style="height:10px; background:#000; border:1px solid #fff; border-radius:5px; overflow:hidden;"><div id="h1" style="height:100%; background:#2ecc71; width:100%;"></div></div>
+            <div style="height:6px; background:#000; border:1px solid #fff; border-radius:3px; overflow:hidden; margin-top:2px;"><div id="s1" style="height:100%; background:#3498db; width:0%;"></div></div>
+            <span id="name1" style="font-size:10px"></span>
+        </div>
+        <div style="width:120px; text-align:right;">
+            <div style="height:10px; background:#000; border:1px solid #fff; border-radius:5px; overflow:hidden;"><div id="h2" style="height:100%; background:#2ecc71; width:100%;"></div></div>
+            <div style="height:6px; background:#000; border:1px solid #fff; border-radius:3px; overflow:hidden; margin-top:2px;"><div id="s2" style="height:100%; background:#3498db; width:0%;"></div></div>
+            <span id="name2" style="font-size:10px"></span>
+        </div>
     </div>
-    <img id="m1" class="player-img" style="position:absolute; bottom:10px; left:10%;">
-    <img id="m2" class="player-img" style="position:absolute; bottom:10px; right:10%; transform:scaleX(-1);">
+    <div class="char-box" style="left:10%"><img id="img1"></div>
+    <div class="char-box" style="right:10%; transform:scaleX(-1)"><img id="img2"></div>
 </div>
 
 <div id="ctrl">
-    <div class="side"><button class="atk" id="a1">ATAK</button><button class="ult" id="u1">ULTİ</button></div>
-    <div class="side" id="p2c"><button class="atk" id="a2" style="background:#800">ATAK</button><button class="ult" id="u2">ULTİ</button></div>
+    <div class="side">
+        <button class="atk-btn" id="btn-atk1">ATAK</button>
+        <button id="u1" class="ult-btn">ULTİ</button>
+    </div>
+    <div class="side" id="p2area">
+        <button class="atk-btn" id="btn-atk2" style="background:#800">ATAK</button>
+        <button id="u2" class="ult-btn">ULTİ</button>
+    </div>
 </div>
 
 <script>
-    const names = ["Tom", "Angela", "Hank", "Ginger", "Ben", "Becca", "Roy", "Hippo", "Ginna", "Gus", "Flip", "Squeak", "Blinky", "Dot", "Sugar"];
-    let images = {}; // Resimlerin verilerini burada tutacağız
-    let p1=null, p2=null, hp1=100, hp2=100, sp1=0, sp2=0, isBot=false, bInt;
+    const road = [{k:1000,n:"Hank"},{k:2000,n:"Becca"},{k:3000,n:"Ben"},{k:4000,n:"Ginger"},{k:5000,n:"Hippo"},{k:6000,n:"Ginna"},{k:10000,n:"Roy"}];
+    const chars = ["Tom","Angela","Hank","Becca","Ben","Ginger","Hippo","Ginna","Roy","Gus","Flip","Squeak","Blinky","Dot","Sugar"];
+    
+    let kupa = parseInt(localStorage.getItem('kupa')) || 0;
+    let unlocked = JSON.parse(localStorage.getItem('unlocked')) || ["Tom","Angela"];
+    let p1, p2, hp1, hp2, sp1=0, sp2=0, isBot, bLoop;
 
-    // Yükleme listesini oluştur
-    const list = document.getElementById('upload-list');
-    names.forEach(name => {
-        let row = document.createElement('div');
-        row.className = 'upload-row';
-        row.innerHTML = `<span>${name}:</span> <input type="file" accept="image/*" onchange="handleFile(event, '${name}')">`;
-        list.appendChild(row);
-    });
+    function save() {
+        localStorage.setItem('kupa', kupa);
+        localStorage.setItem('unlocked', JSON.stringify(unlocked));
+        updateUI();
+    }
 
-    function handleFile(event, name) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => { images[name] = e.target.result; };
-            reader.readAsDataURL(file);
+    function updateUI() {
+        document.getElementById('k-txt').innerText = kupa;
+        let next = road.find(r => !unlocked.includes(r.n));
+        if(next) {
+            document.getElementById('progress-fill').style.width = Math.min(100, (kupa/next.k)*100) + "%";
+            document.getElementById('n-reward').innerText = "Hedef: " + next.n + " (" + next.k + ")";
         }
     }
 
-    function finishSetup() {
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('menu').style.display = 'flex';
-        buildGrid();
-    }
-
-    function buildGrid() {
-        const g = document.getElementById('grid');
-        names.forEach(name => {
-            let d = document.createElement('div');
-            d.className = 'item';
-            // Eğer resim seçildiyse onu göster, seçilmediyse gri kutu
-            let imgTag = images[name] ? `<img src="${images[name]}">` : `<div style="height:80px; background:#444"></div>`;
-            d.innerHTML = `${imgTag}<p>${name}</p>`;
-            d.onclick = () => {
-                if(!p1) {
-                    p1 = name;
-                    if(isBot) { p2 = names[Math.floor(Math.random()*names.length)]; startGame(); }
-                    else { document.getElementById('msg').innerText = "2. OYUNCU SEÇ"; }
-                } else if(!p2) { p2 = name; startGame(); }
-            };
+    function openS(bot) {
+        isBot = bot; document.getElementById('menu').style.display='none'; document.getElementById('selection').style.display='flex';
+        const g = document.getElementById('grid'); g.innerHTML = "";
+        chars.forEach(n => {
+            let lock = !unlocked.includes(n);
+            let d = document.createElement('div'); d.className = 'item' + (lock?' locked':'');
+            let tr = road.find(r=>r.n===n);
+            d.innerHTML = `<img src="${n.toLowerCase()}.jpg"><p style="font-size:9px">${n}${lock && tr?' ('+tr.k+')':''}</p>`;
+            if(!lock) d.onclick = () => { if(!p1){p1=n; if(isBot){p2=unlocked[Math.floor(Math.random()*unlocked.length)]; start();} } else {p2=n; start();} };
             g.appendChild(d);
         });
     }
 
-    function go(bot) { isBot=bot; document.getElementById('menu').style.display='none'; document.getElementById('selection').style.display='flex'; }
-
-    function startGame() {
-        document.getElementById('selection').style.display='none';
-        document.getElementById('m1').src = images[p1] || "";
-        document.getElementById('m2').src = images[p2] || "";
-        document.getElementById('n1').innerText = p1;
-        document.getElementById('n2').innerText = p2 + (isBot ? " (BOT)" : "");
-
-        if(isBot) {
-            document.getElementById('p2c').style.opacity = "0.2";
-            // BOT ÇILGINLAR GİBİ BASIYOR (100ms)
-            bInt = setInterval(() => {
-                if(hp1<=0 || hp2<=0) return;
-                sp2 >= 100 ? hit(2, 'u') : hit(2, 'a');
-            }, 100);
-        }
-
-        const setupBtn = (id, p, t) => {
-            let btn = document.getElementById(id);
-            btn.onclick = () => hit(p, t);
-            btn.ontouchstart = (e) => { e.preventDefault(); hit(p, t); };
-        };
-        setupBtn('a1', 1, 'a'); setupBtn('u1', 1, 'u');
-        setupBtn('a2', 2, 'a'); setupBtn('u2', 2, 'u');
+    function start() {
+        document.getElementById('selection').style.display='none'; document.getElementById('arena').style.display='flex'; document.getElementById('ctrl').style.display='flex';
+        document.getElementById('img1').src = p1.toLowerCase()+".jpg"; document.getElementById('img2').src = p2.toLowerCase()+".jpg";
+        document.getElementById('name1').innerText = p1; document.getElementById('name2').innerText = p2;
+        hp1=100; hp2=100; sp1=0; sp2=0; upHUD();
+        if(isBot) bLoop = setInterval(() => { if(hp1>0 && hp2>0) sp2>=100 ? ult(2) : hit(2); }, 600);
     }
 
-    function hit(p, t) {
-        if(hp1<=0 || hp2<=0) return;
-        if(t==='a') {
-            if(p===1) { hp2-=5; sp1=Math.min(100, sp1+10); }
-            else { hp1-=5; sp2=Math.min(100, sp2+10); }
-        } else if((p===1 && sp1>=100) || (p===2 && sp2>=100)) {
-            if(p===1) { hp2-=25; sp1=0; } else { hp1-=25; sp2=0; }
-        }
-        
-        document.getElementById('h1').style.width = hp1+"%";
-        document.getElementById('h2').style.width = hp2+"%";
-        document.getElementById('u1').classList.toggle('ready', sp1>=100);
-        document.getElementById('u2').classList.toggle('ready', sp2>=100);
+    // MULTI-TOUCH FIX: Aynı anda basmayı sağlar
+    function hit(p) {
+        if(p===1){ hp2-=7; sp1=Math.min(100, sp1+15); } else { hp1-=7; sp2=Math.min(100, sp2+15); }
+        upHUD(); check();
+    }
 
+    function ult(p) {
+        let n = (p===1?p1:p2); let d = 30;
+        if(n==="Squeak" || n==="Sugar") d=45;
+        if(n==="Blinky"){ d=20; if(p===1) hp1=Math.min(100,hp1+20); else hp2=Math.min(100,hp2+20); }
+        if(p===1){ hp2-=d; sp1=0; } else { hp1-=d; sp2=0; }
+        upHUD(); check();
+    }
+
+    function upHUD() {
+        document.getElementById('h1').style.width=hp1+"%"; document.getElementById('h2').style.width=hp2+"%";
+        document.getElementById('s1').style.width=sp1+"%"; document.getElementById('s2').style.width=sp2+"%";
+        document.getElementById('u1').className = sp1>=100 ? "ult-btn ult-ready" : "ult-btn";
+        document.getElementById('u2').className = sp2>=100 ? "ult-btn ult-ready" : "ult-btn";
+    }
+
+    function check() {
         if(hp1<=0 || hp2<=0) {
-            clearInterval(bInt);
-            alert(hp1<=0 ? "BOT KAZANDI!" : "SEN KAZANDIN!");
-            location.reload();
+            clearInterval(bLoop); kupa += 100;
+            road.forEach(r => { if(kupa>=r.k && !unlocked.includes(r.n)) unlocked.push(r.n); });
+            save(); alert("Maç Bitti! +100 Kupa."); location.reload();
         }
     }
+
+    // BUTON OLAYLARI (Multi-Touch Desteği)
+    const addAction = (id, p, type) => {
+        const el = document.getElementById(id);
+        const action = () => { if(type==='atk') hit(p); else ult(p); };
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); action(); });
+        el.addEventListener('mousedown', (e) => { action(); });
+    };
+
+    addAction('btn-atk1', 1, 'atk'); addAction('btn-atk2', 2, 'atk');
+    addAction('u1', 1, 'ult'); addAction('u2', 2, 'ult');
+
+    function openShop() { document.getElementById('shop').style.display='flex'; document.getElementById('buy-b').innerText = kupa>=1000 ? "SATIN AL (1000 🏆)" : "YETERSİZ KUPA"; }
+    function closeShop() { document.getElementById('shop').style.display='none'; }
+    function buyB() {
+        if(kupa<1000) return;
+        let p = ["Gus","Flip","Squeak","Blinky","Dot","Sugar"].filter(x=>!unlocked.includes(x));
+        if(p.length===0){ alert("Tüm kutu karakterleri açık!"); return; }
+        kupa-=1000; unlocked.push(p[Math.floor(Math.random()*p.length)]); save(); alert("YENİ KARAKTER ÇIKTI!"); location.reload();
+    }
+    updateUI();
 </script>
 </body>
 </html>

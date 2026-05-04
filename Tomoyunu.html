@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Oyunu - Klasik Geniş Bar</title>
+    <title>Tom Oyunu - Klasik Stil</title>
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background: #111; color: white; touch-action: none; user-select: none; }
         
-        /* KLASİK DİKEY SEÇİM EKRANI */
+        /* SEVDİĞİN KLASİK SEÇİM EKRANI */
         #selection-screen { position: fixed; inset: 0; background: #222; z-index: 2000; padding: 20px; text-align: center; overflow-y: auto; }
-        .char-item { background: #333; padding: 15px; margin: 10px auto; border-radius: 10px; width: 85%; max-width: 350px; cursor: pointer; border: 2px solid #555; display: flex; align-items: center; justify-content: center; gap: 20px; }
-        .char-item:active { background: #444; border-color: #ff0055; }
+        .char-item { background: #333; padding: 15px; margin: 12px auto; border-radius: 12px; width: 85%; max-width: 350px; cursor: pointer; border: 3px solid #555; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .char-item:active { background: #444; border-color: #00f2fe; transform: scale(0.95); }
         .char-item span { font-size: 40px; }
         .char-item p { margin: 0; font-size: 20px; font-weight: bold; }
 
         #arena { width: 100%; height: 50vh; background: radial-gradient(circle, #1e3c72, #050a14); position: relative; display: flex; justify-content: center; align-items: flex-end; border-bottom: 4px solid #fff; }
         
-        /* BÜYÜTÜLMÜŞ CAN BARLARI */
-        .hud { position: absolute; top: 15px; width: 95%; display: flex; justify-content: space-between; }
-        .bar-container { width: 180px; height: 18px; background: #222; border-radius: 9px; border: 2px solid #444; overflow: hidden; margin-bottom: 6px; }
+        /* CAN BARLARI (GÖRÜNÜR HALE GETİRİLDİ) */
+        .hud { position: absolute; top: 40px; width: 92%; display: flex; justify-content: space-between; z-index: 100; }
+        .bar-container { width: 160px; height: 18px; background: #000; border-radius: 9px; border: 2px solid #fff; overflow: hidden; margin-bottom: 6px; }
         .hp-fill { height: 100%; width: 100%; background: #ff0055; transition: width 0.2s; }
         .sp-fill { height: 100%; width: 0%; background: #00f2fe; transition: width 0.2s; }
         
         .char-container { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; }
         .emoji { font-size: 80px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
-        #p1-wrap { left: 12%; } #p2-wrap { right: 12%; }
+        #p1-wrap { left: 10%; } #p2-wrap { right: 10%; }
         #p2-wrap .emoji { transform: scaleX(-1); }
 
         /* KONTROLLER */
         #controls { height: 50vh; display: flex; }
         .p-area { flex: 1; display: flex; flex-direction: column; }
         .atk-btn { flex: 2.5; border: none; font-size: 24px; font-weight: 900; color: white; outline: none; border: 1px solid #000; }
-        .ult-btn { flex: 1.5; border: none; font-size: 18px; font-weight: bold; color: white; background: #333; opacity: 0.5; border: 1px solid #000; }
-        .ult-ready { background: #00f2fe !important; opacity: 1 !important; color: #000; box-shadow: 0 0 20px #00f2fe; }
+        .ult-btn { flex: 1.5; border: none; font-size: 18px; font-weight: bold; color: white; background: #222; opacity: 0.4; border: 1px solid #000; }
+        .ult-ready { background: #ff4757 !important; opacity: 1 !important; box-shadow: 0 0 15px #ff4757; }
 
         #btn-1-atk { background: #1a2a6c; }
         #btn-2-atk { background: #b21f1f; }
@@ -42,28 +42,28 @@
         @keyframes hitL { 50% { transform: translateX(70px); } }
         @keyframes hitR { 50% { transform: translateX(-70px); } }
 
-        #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; }
-        #start-btn { margin-top: 20px; padding: 15px 50px; font-size: 22px; background: #27ae60; color: white; border: none; border-radius: 40px; display: none; font-weight: bold; }
+        #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; }
+        #start-btn { margin-top: 15px; padding: 15px 45px; font-size: 22px; background: #27ae60; color: white; border: none; border-radius: 40px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="selection-screen">
-    <h1 style="color:#00f2fe">Karakterini Seç</h1>
-    <h3 id="info-text">1. Oyuncu Seçimi</h3>
+    <h1 style="color:#00f2fe; margin-bottom: 5px;">Karakter Seç</h1>
+    <h3 id="info-text">1. Oyuncu Seçiyor</h3>
     <div id="grid"></div>
-    <button id="start-btn" onclick="startMatch()">OYUNU BAŞLAT</button>
+    <button id="start-btn" onclick="startMatch()">SAVAŞI BAŞLAT!</button>
 </div>
 
 <div id="arena">
     <div class="hud">
         <div>
-            <div id="n1" style="font-weight:bold; margin-bottom:5px;">P1</div>
+            <div id="n1" style="font-weight:bold; text-shadow: 1px 1px 3px #000;">P1</div>
             <div class="bar-container"><div id="h1" class="hp-fill"></div></div>
             <div class="bar-container"><div id="s1" class="sp-fill"></div></div>
         </div>
         <div style="text-align:right">
-            <div id="n2" style="font-weight:bold; margin-bottom:5px;">P2</div>
+            <div id="n2" style="font-weight:bold; text-shadow: 1px 1px 3px #000;">P2</div>
             <div class="bar-container" style="margin-left:auto"><div id="h2" class="hp-fill"></div></div>
             <div class="bar-container" style="margin-left:auto"><div id="s2" class="sp-fill"></div></div>
         </div>
@@ -85,7 +85,7 @@
 
 <div id="win-overlay">
     <h1 id="win-text">KAZANDIN!</h1>
-    <button onclick="location.reload()" style="padding:15px 30px; font-size:18px; background:#f39c12; color:white; border:none; border-radius:10px;">Tekrar Oyna</button>
+    <button onclick="location.reload()" style="padding:15px 30px; font-size:18px; border-radius:10px; background:#f39c12; color:white; border:none;">Yeniden Başlat</button>
 </div>
 
 <script>
@@ -94,7 +94,7 @@
         {n: "Angela", e: "🐈", u: "ŞİFA", power: -35},
         {n: "Pierre", e: "🦜", u: "SES", power: 22}, 
         {n: "Hank", e: "🐶", u: "KEMİK", power: 20},
-        {n: "Ginger", e: "🐈‍⬛", u: "HAVAVAİ", power: 24}, 
+        {n: "Ginger", e: "🐈‍⬛", u: "FİŞEK", power: 24}, 
         {n: "Roy", e: "🦝🕶️", u: "SOYGUN", power: 32},
         {n: "Ben", e: "🐶🧪", u: "İCAT", power: 30},
         {n: "Becca", e: "🐰🎤", u: "KONSER", power: 28},
@@ -118,12 +118,12 @@
     function select(i) {
         if(!p1c) {
             p1c = chars[i];
-            document.getElementById('info-text').innerText = "2. Oyuncu Seçimi";
+            document.getElementById('info-text').innerText = "2. Oyuncu Seçiyor";
             document.getElementById('info-text').style.color = "#ff0055";
         } else if(!p2c) {
             p2c = chars[i];
             document.getElementById('start-btn').style.display = 'inline-block';
-            document.getElementById('info-text').innerText = "KADRO TAMAM!";
+            document.getElementById('info-text').innerText = "KADRO HAZIR!";
             document.getElementById('info-text').style.color = "#27ae60";
         }
     }
@@ -187,7 +187,6 @@
         if(hp1 <= 0 || hp2 <= 0) {
             document.getElementById('win-overlay').style.display = 'flex';
             document.getElementById('win-text').innerText = hp1 <= 0 ? p2c.n + " KAZANDI!" : p1c.n + " KAZANDI!";
-            document.getElementById('win-text').style.color = hp1 <= 0 ? "#ff0055" : "#00f2fe";
         }
     }
     setup();

@@ -3,201 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🐱 Tom Savaşları Online ⚔️</title>
+    <title>Tom Savaşları Online</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { margin: 0; font-family: sans-serif; background: #000; color: #fff; overflow: hidden; touch-action: none; }
-        #top-bar { position: fixed; top: 0; width: 100%; background: #222; padding: 10px 0; border-bottom: 3px solid #f39c12; text-align: center; z-index: 1000; }
+        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #000; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
+        #top-bar { position: fixed; top: 0; width: 100%; background: #222; z-index: 2000; padding: 10px 0; border-bottom: 2px solid #f39c12; text-align: center; }
         
-        /* Menü ve Seçim Ekranı */
-        #menu, #selection { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1a2a6c; z-index: 2000; }
-        #selection { display: none; background: #111; overflow-y: auto; padding-top: 80px; }
-
-        /* Karakter Kutuları */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; }
-        .item { background: #333; border-radius: 10px; padding: 10px; text-align: center; border: 2px solid #555; }
-        .item img { width: 100%; height: auto; border-radius: 5px; background: #444; min-height: 60px; }
-        .locked { opacity: 0.4; filter: grayscale(1); }
-
-        /* Savaş Alanı */
-        #arena { height: 50vh; display: none; position: relative; background: linear-gradient(#000428, #004e92); align-items: flex-end; justify-content: center; }
-        .char-box { width: 120px; height: 120px; position: absolute; bottom: 20px; transition: 0.1s; }
-        .char-box img { width: 100%; height: 100%; object-fit: contain; }
-
-        /* HUD ve Butonlar */
-        .hud { position: absolute; top: 70px; width: 90%; display: flex; justify-content: space-between; }
-        .hp-bar { width: 120px; height: 15px; background: #444; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
-        .hp-fill { height: 100%; background: #2ecc71; width: 100%; transition: 0.3s; }
+        #menu, #shop, #selection { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a2a6c, #000); }
+        #selection { display: none; padding-top: 80px; overflow-y: auto; justify-content: flex-start; background: #111; }
         
-        #ctrl { height: 50vh; display: none; background: #000; }
-        .atk-btn { width: 100%; height: 100%; background: #c0392b; color: #fff; font-size: 30px; font-weight: bold; border: none; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 95%; padding-bottom: 20px; }
+        .item { background: #222; border: 2px solid #444; border-radius: 10px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 40px; }
+        .locked { filter: grayscale(1) brightness(0.3); }
+
+        #arena { height: 50vh; background: #1a1a2a; position: relative; display: none; align-items: flex-end; justify-content: center; border-bottom: 4px solid #000; overflow: hidden; }
+        .hud { position: absolute; top: 70px; width: 92%; display: flex; justify-content: space-between; z-index: 10; }
+        .bar-wrap { width: 45%; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 6px; }
+        .b-bg { width: 100%; height: 16px; background: #333; border-radius: 8px; overflow: hidden; }
+        .hp-f { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
+        .hp-critical { background: #e74c3c !important; }
+
+        #ctrl { height: 50vh; display: none; background: #002; flex-direction: column; justify-content: center; align-items: center; }
+        .atk-btn { width: 80%; height: 60px; background: #c0392b; color: #fff; font-size: 24px; font-weight: bold; border: none; border-radius: 30px; box-shadow: 0 6px #880000; cursor: pointer; }
+        .atk-btn:active { transform: translateY(4px); box-shadow: 0 2px #880000; }
         
-        .btn { padding: 15px 30px; margin: 10px; border-radius: 25px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; }
+        .btn { width: 220px; padding: 15px; margin: 8px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; box-shadow: 0 4px #000; cursor: pointer; }
+        .input-name { padding: 12px; border-radius: 15px; border: 2px solid #f39c12; width: 200px; text-align: center; margin-bottom: 10px; font-weight: bold; background: #fff; color: #000; }
+        
+        .char-box { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.1s; }
+        .emoji-v { font-size: 100px; display: inline-block; }
+        .flip { transform: scaleX(-1); }
     </style>
 </head>
 <body>
 
-<div id="top-bar">🏆 Kupa: <span id="kupa-txt">0</span></div>
+<div id="top-bar">
+    <div style="color:#f1c40f; font-weight:bold;">🏆 <span id="k-txt">0</span></div>
+</div>
 
 <div id="menu">
-    <h1>TOM SAVAŞLARI ⚔️</h1>
-    <button class="btn" style="background:#2ecc71" onclick="startApp('bot')">🤖 BOT İLE OYNA</button>
-    <button class="btn" style="background:#3498db" onclick="startApp('create')">🏠 ODA KUR</button>
-    <button class="btn" style="background:#9b59b6" onclick="startApp('join')">🔑 ODAYA KATIL</button>
+    <h1 style="margin-bottom:10px; text-shadow: 2px 2px #000;">TOM ONLINE 🎮</h1>
+    <input type="text" id="playerNameInput" class="input-name" placeholder="İsmini Yaz..." maxlength="10">
+    <button class="btn" style="background:#2ecc71" onclick="openS('bot')">🤖 TEK OYUNCU</button>
+    <button class="btn" style="background:#3498db" onclick="openS('create')">🏠 ODA KUR</button>
+    <button class="btn" style="background:#9b59b6" onclick="openS('join')">🔑 ODAYA KATIL</button>
+    <button class="btn" style="background:#f1c40f; color:#000;" onclick="openShop()">🏪 DÜKKAN</button>
 </div>
 
-<div id="selection">
-    <h2>KARAKTER SEÇ 👤</h2>
-    <div class="grid" id="char-grid"></div>
+<div id="shop" style="display:none">
+    <div style="font-size:80px; margin-bottom:20px;">🎁</div>
+    <button class="btn" style="background:#2ecc71" onclick="buyB()">1000 🏆 MEGA KUTU</button>
+    <button class="btn" style="background:#444" onclick="closeShop()">GERİ</button>
 </div>
+
+<div id="selection"><div class="grid" id="grid"></div></div>
 
 <div id="arena">
     <div class="hud">
-        <div><div class="hp-bar"><div id="hp1" class="hp-fill"></div></div><small id="n1"></small></div>
-        <div><div class="hp-bar"><div id="hp2" class="hp-fill"></div></div><small id="n2"></small></div>
+        <div class="bar-wrap">
+            <div class="b-bg"><div id="h1" class="hp-f"></div></div>
+            <div id="display-name1" style="font-size:14px; font-weight:bold; color:#fff; margin-top:5px;">Sen</div>
+        </div>
+        <div class="bar-wrap" style="text-align:right">
+            <div class="b-bg"><div id="h2" class="hp-f"></div></div>
+            <div id="display-name2" style="font-size:14px; font-weight:bold; color:#fff; margin-top:5px;">Bekleniyor...</div>
+        </div>
     </div>
-    <div class="char-box" style="left:10%" id="box1"><img id="img1"></div>
-    <div class="char-box" style="right:10%; transform: scaleX(-1);" id="box2"><img id="img2"></div>
+    
+    <div id="box1" class="char-box" style="left:10%;">
+        <span id="char1" class="emoji-v">🐱</span>
+    </div>
+    
+    <div id="box2" class="char-box" style="right:10%;">
+        <span id="char2" class="emoji-v flip">❓</span>
+    </div>
 </div>
 
 <div id="ctrl">
-    <button class="atk-btn" onclick="attack()">💥 VUR!</button>
+    <button class="atk-btn" onclick="hitRequest()">⚡ ATAK YAP!</button>
 </div>
 
 <script>
-    // FİREBASE YAPILANDIRMASI
-    const conf = { databaseURL: "https://tomoyunu-5cd2f-default-rtdb.europe-west1.firebasedatabase.app/" };
-    firebase.initializeApp(conf);
+    // FIREBASE AYARLARI
+    const firebaseConfig = { databaseURL: "https://tomoyunu-5cd2f-default-rtdb.europe-west1.firebasedatabase.app/" };
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // KARAKTER LİSTESİ (KÜÇÜK HARF ÖNEMLİ!)
-    const allChars = ["Tom", "Angela", "Hank", "Becca", "Ben", "Ginger"];
-    let myKupa = parseInt(localStorage.getItem('kupa')) || 0;
-    let unlocked = JSON.parse(localStorage.getItem('unlocked')) || ["Tom", "Angela"];
+    const charMap = {
+        "Tom": "🐱", "Angela": "🐈", "Hank": "🐶", "Becca": "🐰", "Ben": "🐕",
+        "Ginger": "🐱‍🚀", "Hippo": "🦛", "Ginna": "🦊", "Roy": "🦝", "Gus": "🐷",
+        "Flip": "🐸", "Squeak": "🐭", "Blinky": "🐹", "Dot": "🦒", "Sugar": "🦄"
+    };
+    const chars = Object.keys(charMap);
     
-    let mode, myChar, enemyChar, roomID, role;
-    let hp1 = 100, hp2 = 100;
+    let kupa = parseInt(localStorage.getItem('kupa')) || 0;
+    let unlocked = JSON.parse(localStorage.getItem('unlocked')) || ["Tom","Angela"];
+    let playerName = localStorage.getItem('p_name') || "Oyuncu";
+    
+    document.getElementById('playerNameInput').value = playerName;
+    document.getElementById('k-txt').innerText = kupa;
 
-    document.getElementById('kupa-txt').innerText = myKupa;
+    let p1Char, hp1=100, hp2=100, mode, roomCode, myRole;
 
-    function startApp(m) {
-        mode = m;
-        document.getElementById('menu').style.display = 'none';
-        document.getElementById('selection').style.display = 'flex';
-        
-        const grid = document.getElementById('char-grid');
-        grid.innerHTML = "";
-        
-        allChars.forEach(c => {
-            let isLocked = !unlocked.includes(c);
-            let div = document.createElement('div');
-            div.className = "item" + (isLocked ? " locked" : "");
-            // ÖNEMLİ: Resim yollarını GitHub'a göre ayarladık
-            div.innerHTML = `<img src="${c.toLowerCase()}.jpg" onerror="this.src='https://via.placeholder.com/100?text=${c}'"> <br> ${c}`;
-            if(!isLocked) div.onclick = () => selectChar(c);
-            grid.appendChild(div);
+    function saveName() {
+        let n = document.getElementById('playerNameInput').value;
+        if(n) { playerName = n; localStorage.setItem('p_name', n); }
+    }
+
+    function openS(m) {
+        saveName();
+        mode = m; 
+        document.getElementById('menu').style.display='none'; 
+        document.getElementById('selection').style.display='flex';
+        const g = document.getElementById('grid'); g.innerHTML = "";
+        chars.forEach(n => {
+            let lock = !unlocked.includes(n);
+            let d = document.createElement('div'); d.className = 'item' + (lock?' locked':'');
+            d.innerHTML = `<span>${charMap[n]}</span><p style="font-size:10px;">${n}</p>`;
+            if(!lock) d.onclick = () => { p1Char=n; handleStart(); };
+            g.appendChild(d);
         });
     }
 
-    function selectChar(c) {
-        myChar = c;
+    function handleStart() {
         if(mode === 'bot') {
-            enemyChar = unlocked[Math.floor(Math.random()*unlocked.length)];
-            setupArena();
-        } else if(mode === 'create') {
-            roomID = Math.floor(1000 + Math.random() * 8999);
-            role = 'p1';
-            db.ref('rooms/' + roomID).set({
-                p1_c: myChar, p1_h: 100, p2_h: 100, status: 'wait'
-            });
-            alert("Oda Kodun: " + roomID);
-            waitOpponent();
-        } else {
-            roomID = prompt("Oda Kodunu Gir:");
-            role = 'p2';
-            db.ref('rooms/' + roomID).update({ p2_c: myChar, status: 'play' });
-            setupArena();
-        }
-    }
-
-    function waitOpponent() {
-        db.ref('rooms/' + roomID).on('value', s => {
-            let d = s.val();
-            if(d && d.status === 'play') {
-                enemyChar = d.p2_c;
-                setupArena();
-            }
-        });
-    }
-
-    function setupArena() {
-        document.getElementById('selection').style.display = 'none';
-        document.getElementById('arena').style.display = 'flex';
-        document.getElementById('ctrl').style.display = 'block';
-        
-        // Resimleri yükle
-        document.getElementById('img1').src = myChar.toLowerCase() + ".jpg";
-        if(mode === 'bot') {
-            document.getElementById('img2').src = enemyChar.toLowerCase() + ".jpg";
-            document.getElementById('n1').innerText = "Sen (" + myChar + ")";
-            document.getElementById('n2').innerText = "Bot (" + enemyChar + ")";
-            startBotLogic();
-        } else {
-            listenOnline();
-        }
-    }
-
-    function listenOnline() {
-        db.ref('rooms/' + roomID).on('value', s => {
-            let d = s.val();
-            if(!d) return;
-            hp1 = d.p1_h; hp2 = d.p2_h;
-            document.getElementById('hp1').style.width = hp1 + "%";
-            document.getElementById('hp2').style.width = hp2 + "%";
+            document.getElementById('selection').style.display='none'; 
+            document.getElementById('arena').style.display='flex'; 
+            document.getElementById('ctrl').style.display='flex';
+            let botChar = chars[Math.floor(Math.random()*chars.length)];
+            document.getElementById('char1').innerText = charMap[p1Char];
+            document.getElementById('char2').innerText = charMap[botChar];
+            document.getElementById('display-name1').innerText = playerName;
+            document.getElementById('display-name2').innerText = "Bot " + botChar;
             
-            if(role === 'p1') {
-                document.getElementById('img2').src = d.p2_c.toLowerCase() + ".jpg";
-            } else {
-                document.getElementById('img2').src = d.p1_c.toLowerCase() + ".jpg";
-            }
-
-            if(hp1 <= 0 || hp2 <= 0) endGame(hp1, hp2);
-        });
-    }
-
-    function attack() {
-        if(mode === 'bot') {
-            hp2 -= 10;
-            document.getElementById('hp2').style.width = hp2 + "%";
-            if(hp2 <= 0) endGame(100, 0);
-        } else {
-            if(role === 'p1') db.ref('rooms/' + roomID).update({ p2_h: Math.max(0, hp2 - 10) });
-            else db.ref('rooms/' + roomID).update({ p1_h: Math.max(0, hp1 - 10) });
+            let botInt = setInterval(() => {
+                if(hp1 > 0 && hp2 > 0) { 
+                    hp1 -= 7; 
+                    upHUD(); 
+                    if(hp1 <= 0) { clearInterval(botInt); checkWin(); }
+                } else { clearInterval(botInt); }
+            }, 1500);
+        } else if(mode === 'create') {
+            roomCode = Math.floor(1000 + Math.random() * 9000);
+            myRole = "p1";
+            db.ref('rooms/' + roomCode).set({ 
+                p1_hp: 100, p2_hp: 100, p1_char: p1Char, p1_name: playerName,
+                p2_char: "", p2_name: "Bekleniyor...", status: "waiting" 
+            }).then(() => {
+                alert("ODA KODUN: " + roomCode);
+                document.getElementById('selection').style.display='none'; 
+                document.getElementById('arena').style.display='flex';
+                document.getElementById('display-name1').innerText = playerName;
+                document.getElementById('char1').innerText = charMap[p1Char];
+                listenRoom();
+            });
+        } else if(mode === 'join') {
+            roomCode = prompt("Oda Kodunu Gir:");
+            if(!roomCode) return;
+            myRole = "p2";
+            db.ref('rooms/' + roomCode).once('value').then(snap => {
+                if(snap.exists()) {
+                    db.ref('rooms/' + roomCode).update({ 
+                        p2_char: p1Char, p2_name: playerName, status: "playing" 
+                    });
+                    document.getElementById('selection').style.display='none'; 
+                    document.getElementById('arena').style.display='flex';
+                    listenRoom();
+                } else { alert("Oda bulunamadı!"); location.reload(); }
+            });
         }
     }
 
-    function startBotLogic() {
-        let timer = setInterval(() => {
-            if(hp1 <= 0 || hp2 <= 0) { clearInterval(timer); return; }
-            hp1 -= 5;
-            document.getElementById('hp1').style.width = hp1 + "%";
-            if(hp1 <= 0) endGame(0, 100);
-        }, 1500);
+    function listenRoom() {
+        db.ref('rooms/' + roomCode).on('value', (snap) => {
+            const data = snap.val(); if(!data) return;
+            
+            if(myRole === "p1") {
+                hp1 = data.p1_hp; hp2 = data.p2_hp;
+                document.getElementById('display-name2').innerText = data.p2_name;
+                if(data.p2_char) document.getElementById('char2').innerText = charMap[data.p2_char];
+            } else {
+                hp1 = data.p2_hp; hp2 = data.p1_hp;
+                document.getElementById('display-name1').innerText = data.p2_name + " (Sen)";
+                document.getElementById('display-name2').innerText = data.p1_name;
+                document.getElementById('char1').innerText = charMap[data.p2_char];
+                document.getElementById('char2').innerText = charMap[data.p1_char];
+            }
+
+            if(data.status === "playing") {
+                document.getElementById('ctrl').style.display = 'flex';
+            }
+            
+            upHUD();
+            if(hp1 <= 0 || hp2 <= 0) checkWin();
+        });
     }
 
-    function endGame(h1, h2) {
-        let win = (role === 'p1' && h2 <= 0) || (role === 'p2' && h1 <= 0) || (mode === 'bot' && h2 <= 0);
+    function hitRequest() {
+        // Görsel efekt
+        const box = document.getElementById('box1');
+        box.style.transform = "translateX(40px)";
+        setTimeout(() => box.style.transform = "translateX(0)", 100);
+
+        if(mode === 'bot') { hp2 -= 10; upHUD(); if(hp2 <= 0) checkWin(); return; }
+        
+        if(myRole === "p1") {
+            db.ref('rooms/' + roomCode).update({ p2_hp: Math.max(0, hp2 - 10) });
+        } else {
+            db.ref('rooms/' + roomCode).update({ p1_hp: Math.max(0, hp2 - 10) });
+        }
+    }
+
+    function upHUD() {
+        document.getElementById('h1').style.width = hp1 + "%"; 
+        document.getElementById('h2').style.width = hp2 + "%";
+        document.getElementById('h1').classList.toggle('hp-critical', hp1 < 30);
+        document.getElementById('h2').classList.toggle('hp-critical', hp2 < 30);
+    }
+
+    function checkWin() {
+        let win = hp2 <= 0;
+        db.ref('rooms/' + roomCode).off(); // Dinlemeyi durdur
+        
         if(win) {
-            myKupa += 50;
-            localStorage.setItem('kupa', myKupa);
+            kupa += 100;
+            localStorage.setItem('kupa', kupa);
             alert("TEBRİKLER! KAZANDIN 🏆");
         } else {
             alert("KAYBETTİN! 💀");
         }
+
+        if(roomCode && myRole === "p1") db.ref('rooms/' + roomCode).remove();
         location.reload();
+    }
+
+    function openShop() { document.getElementById('shop').style.display='flex'; }
+    function closeShop() { document.getElementById('shop').style.display='none'; }
+    function buyB() {
+        if(kupa >= 1000) {
+            let list = chars.filter(x => !unlocked.includes(x));
+            if(list.length > 0) {
+                kupa -= 1000;
+                let won = list[Math.floor(Math.random()*list.length)];
+                unlocked.push(won);
+                localStorage.setItem('unlocked', JSON.stringify(unlocked));
+                localStorage.setItem('kupa', kupa);
+                alert("Kutudan " + won + " Çıktı! 🎉");
+                location.reload();
+            } else alert("Tüm karakterler zaten açık!");
+        } else alert("Yetersiz Kupa! ❌");
     }
 </script>
 </body>

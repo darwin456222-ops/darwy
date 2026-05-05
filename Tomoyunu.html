@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Savaşları Online</title>
+    <title>Tom Online: Final Strike</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -16,41 +16,50 @@
         #selection { display: none; padding-top: 80px; overflow-y: auto; justify-content: flex-start; background: #111; }
         
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 95%; padding-bottom: 20px; }
-        .item { background: #222; border: 2px solid #444; border-radius: 10px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 40px; }
+        .item { background: #222; border: 2px solid #444; border-radius: 10px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; text-align: center; }
+        .stats-tag { font-size: 9px; color: #f1c40f; margin-top: 3px; }
+        .abi-desc { font-size: 8px; color: #9b59b6; margin-top: 2px; padding: 0 5px; }
         .locked { filter: grayscale(1) brightness(0.3); }
 
         #arena { height: 50vh; background: #1a1a2a; position: relative; display: none; align-items: flex-end; justify-content: center; border-bottom: 4px solid #000; overflow: hidden; }
+        .shake { animation: shakeAnim 0.2s; }
+        @keyframes shakeAnim { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-4px, 0); } 75% { transform: translate(4px, 0); } }
+
         .hud { position: absolute; top: 70px; width: 92%; display: flex; justify-content: space-between; z-index: 10; }
         .bar-wrap { width: 45%; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 6px; }
         .b-bg { width: 100%; height: 16px; background: #333; border-radius: 8px; overflow: hidden; }
-        .hp-f { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
-        .hp-critical { background: #e74c3c !important; }
+        .hp-f { height: 100%; background: #4cd137; width: 100%; transition: 0.2s; }
+        
+        #ctrl { height: 50vh; display: none; background: #001; flex-direction: column; justify-content: center; align-items: center; gap: 10px; }
+        .atk-btn { width: 85%; height: 65px; background: linear-gradient(#e74c3c, #c0392b); color: #fff; font-size: 24px; font-weight: bold; border: none; border-radius: 35px; box-shadow: 0 6px #880000; cursor: pointer; }
+        .abi-btn { width: 85%; height: 55px; background: linear-gradient(#9b59b6, #8e44ad); color: #fff; font-size: 18px; font-weight: bold; border: none; border-radius: 25px; box-shadow: 0 5px #4b0082; cursor: pointer; }
+        .abi-btn:disabled { background: #444; box-shadow: none; opacity: 0.6; }
 
-        #ctrl { height: 50vh; display: none; background: #002; flex-direction: column; justify-content: center; align-items: center; }
-        .atk-btn { width: 80%; height: 60px; background: #c0392b; color: #fff; font-size: 24px; font-weight: bold; border: none; border-radius: 30px; box-shadow: 0 6px #880000; cursor: pointer; }
-        .atk-btn:active { transform: translateY(4px); box-shadow: 0 2px #880000; }
+        .char-box { position: absolute; bottom: 20px; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .emoji-v { font-size: 95px; }
         
-        .btn { width: 220px; padding: 15px; margin: 8px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; box-shadow: 0 4px #000; cursor: pointer; }
-        .input-name { padding: 12px; border-radius: 15px; border: 2px solid #f39c12; width: 200px; text-align: center; margin-bottom: 10px; font-weight: bold; background: #fff; color: #000; }
-        
-        .char-box { position: absolute; bottom: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.1s; }
-        .emoji-v { font-size: 100px; display: inline-block; }
-        .flip { transform: scaleX(-1); }
+        #pop { position: absolute; font-weight: bold; font-size: 26px; pointer-events: none; animation: float 0.8s forwards; display: none; z-index: 100; text-shadow: 2px 2px #000; }
+        @keyframes float { 0% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-80px); } }
+
+        .btn { width: 220px; padding: 15px; margin: 8px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px #000; }
+        .input-name { padding: 12px; border-radius: 15px; border: 2px solid #f39c12; width: 200px; text-align: center; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
+
+<div id="pop"></div>
 
 <div id="top-bar">
     <div style="color:#f1c40f; font-weight:bold;">🏆 <span id="k-txt">0</span></div>
 </div>
 
 <div id="menu">
-    <h1 style="margin-bottom:10px; text-shadow: 2px 2px #000;">TOM ONLINE 🎮</h1>
-    <input type="text" id="playerNameInput" class="input-name" placeholder="İsmini Yaz..." maxlength="10">
-    <button class="btn" style="background:#2ecc71" onclick="openS('bot')">🤖 TEK OYUNCU</button>
-    <button class="btn" style="background:#3498db" onclick="openS('create')">🏠 ODA KUR</button>
-    <button class="btn" style="background:#9b59b6" onclick="openS('join')">🔑 ODAYA KATIL</button>
-    <button class="btn" style="background:#f1c40f; color:#000;" onclick="openShop()">🏪 DÜKKAN</button>
+    <h1 style="text-shadow: 2px 2px #000; color:#f39c12;">TOM ONLINE ⚔️</h1>
+    <input type="text" id="playerNameInput" class="input-name" placeholder="İsim..." maxlength="10">
+    <button class="btn" style="background:#2ecc71; color:#fff;" onclick="openS('bot')">🤖 TEK OYUNCU</button>
+    <button class="btn" style="background:#3498db; color:#fff;" onclick="openS('create')">🏠 ODA KUR</button>
+    <button class="btn" style="background:#9b59b6; color:#fff;" onclick="openS('join')">🔑 KATIL</button>
+    <button class="btn" style="background:#f1c40f" onclick="openShop()">🏪 DÜKKAN</button>
 </div>
 
 <div id="shop" style="display:none">
@@ -65,196 +74,244 @@
     <div class="hud">
         <div class="bar-wrap">
             <div class="b-bg"><div id="h1" class="hp-f"></div></div>
-            <div id="display-name1" style="font-size:14px; font-weight:bold; color:#fff; margin-top:5px;">Sen</div>
+            <div id="n1" style="font-size:11px; margin-top:4px; font-weight:bold;">...</div>
         </div>
         <div class="bar-wrap" style="text-align:right">
             <div class="b-bg"><div id="h2" class="hp-f"></div></div>
-            <div id="display-name2" style="font-size:14px; font-weight:bold; color:#fff; margin-top:5px;">Bekleniyor...</div>
+            <div id="n2" style="font-size:11px; margin-top:4px; font-weight:bold;">...</div>
         </div>
     </div>
     
-    <div id="box1" class="char-box" style="left:10%;">
-        <span id="char1" class="emoji-v">🐱</span>
-    </div>
-    
-    <div id="box2" class="char-box" style="right:10%;">
-        <span id="char2" class="emoji-v flip">❓</span>
-    </div>
+    <div id="box1" class="char-box" style="left:10%;"><span id="char1" class="emoji-v">🐱</span></div>
+    <div id="box2" class="char-box" style="right:10%;"><span id="char2" class="emoji-v flip">❓</span></div>
 </div>
 
 <div id="ctrl">
-    <button class="atk-btn" onclick="hitRequest()">⚡ ATAK YAP!</button>
+    <button id="atk-btn" class="atk-btn" onclick="hit()">⚡ SALDIR</button>
+    <button id="abi-btn" class="abi-btn" onclick="useAbi()">🌟 SÜPER GÜÇ</button>
 </div>
 
 <script>
-    // FIREBASE AYARLARI
     const firebaseConfig = { databaseURL: "https://tomoyunu-5cd2f-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const charMap = {
-        "Tom": "🐱", "Angela": "🐈", "Hank": "🐶", "Becca": "🐰", "Ben": "🐕",
-        "Ginger": "🐱‍🚀", "Hippo": "🦛", "Ginna": "🦊", "Roy": "🦝", "Gus": "🐷",
-        "Flip": "🐸", "Squeak": "🐭", "Blinky": "🐹", "Dot": "🦒", "Sugar": "🦄"
+    const charData = {
+        "Tom": { e: "🐱", hp: 110, dmg: 10, abi: "Süper Pençe", val: 25 },
+        "Angela": { e: "🐈", hp: 95, dmg: 11, abi: "İyileşme", val: 35 },
+        "Hank": { e: "🐶", hp: 140, dmg: 8, abi: "Büyük Isırık", val: 30 },
+        "Becca": { e: "🐰", hp: 85, dmg: 15, abi: "Hızlı Atak", val: 28 },
+        "Ben": { e: "🐕", hp: 120, dmg: 10, abi: "Lazer", val: 22 },
+        "Ginger": { e: "😼", hp: 80, dmg: 18, abi: "Roket", val: 35 },
+        "Hippo": { e: "🦛", hp: 220, dmg: 7, abi: "Ezme", val: 25 },
+        "Ginna": { e: "🦒", hp: 100, dmg: 13, abi: "Kuyruk", val: 24 },
+        "Roy": { e: "🦝", hp: 110, dmg: 12, abi: "Can Çalması", val: 15 },
+        "Gus": { e: "🦔", hp: 150, dmg: 9, abi: "Zıplama", val: 25 },
+        "Flip": { e: "🦜", hp: 95, dmg: 13, abi: "Kuş Tüyleri", val: 20 },
+        "Squeak": { e: "🐹", hp: 75, dmg: 20, abi: "Jelibon", val: 40 },
+        "Blinky": { e: " 🦭", hp: 115, dmg: 11, abi: "Süper Vuruş", val: 25 },
+        "Dot": { e: "🐨", hp: 130, dmg: 10, abi: "Elektrik Çarpması", val: 25 },
+        "Sugar": { e: "🦄", hp: 105, dmg: 14, abi: "Sihir", val: 30 }
     };
-    const chars = Object.keys(charMap);
-    
+
     let kupa = parseInt(localStorage.getItem('kupa')) || 0;
     let unlocked = JSON.parse(localStorage.getItem('unlocked')) || ["Tom","Angela"];
-    let playerName = localStorage.getItem('p_name') || "Oyuncu";
-    
-    document.getElementById('playerNameInput').value = playerName;
+    let pName = localStorage.getItem('p_name') || "Oyuncu";
+    let myChar, hp1, hp2, max1, max2, mode, roomCode, myRole, abiReady = true, isGameOver = false;
+
+    document.getElementById('playerNameInput').value = pName;
     document.getElementById('k-txt').innerText = kupa;
 
-    let p1Char, hp1=100, hp2=100, mode, roomCode, myRole;
-
-    function saveName() {
-        let n = document.getElementById('playerNameInput').value;
-        if(n) { playerName = n; localStorage.setItem('p_name', n); }
-    }
-
     function openS(m) {
-        saveName();
-        mode = m; 
+        mode = m; pName = document.getElementById('playerNameInput').value || "Oyuncu";
+        localStorage.setItem('p_name', pName);
         document.getElementById('menu').style.display='none'; 
         document.getElementById('selection').style.display='flex';
         const g = document.getElementById('grid'); g.innerHTML = "";
-        chars.forEach(n => {
+        Object.keys(charData).forEach(n => {
             let lock = !unlocked.includes(n);
             let d = document.createElement('div'); d.className = 'item' + (lock?' locked':'');
-            d.innerHTML = `<span>${charMap[n]}</span><p style="font-size:10px;">${n}</p>`;
-            if(!lock) d.onclick = () => { p1Char=n; handleStart(); };
+            d.innerHTML = `<span>${charData[n].e}</span><div class="stats-tag">HP:${charData[n].hp} ATK:${charData[n].dmg}</div><div class="abi-desc">${charData[n].abi}</div>`;
+            if(!lock) d.onclick = () => { myChar=n; start(); };
             g.appendChild(d);
         });
     }
 
-    function handleStart() {
+    function start() {
         if(mode === 'bot') {
-            document.getElementById('selection').style.display='none'; 
-            document.getElementById('arena').style.display='flex'; 
-            document.getElementById('ctrl').style.display='flex';
-            let botChar = chars[Math.floor(Math.random()*chars.length)];
-            document.getElementById('char1').innerText = charMap[p1Char];
-            document.getElementById('char2').innerText = charMap[botChar];
-            document.getElementById('display-name1').innerText = playerName;
-            document.getElementById('display-name2').innerText = "Bot " + botChar;
-            
-            let botInt = setInterval(() => {
-                if(hp1 > 0 && hp2 > 0) { 
-                    hp1 -= 7; 
-                    upHUD(); 
-                    if(hp1 <= 0) { clearInterval(botInt); checkWin(); }
-                } else { clearInterval(botInt); }
-            }, 1500);
+            let botC = Object.keys(charData)[Math.floor(Math.random()*15)];
+            max1 = charData[myChar].hp; hp1 = max1;
+            max2 = charData[botC].hp; hp2 = max2;
+            document.getElementById('char1').innerText = charData[myChar].e;
+            document.getElementById('char2').innerText = charData[botC].e;
+            uiStart();
+            let botInt = setInterval(() => { 
+                if(hp1 > 0 && hp2 > 0) botHit(charData[botC].dmg); 
+                else clearInterval(botInt);
+            }, 2000);
         } else if(mode === 'create') {
-            roomCode = Math.floor(1000 + Math.random() * 9000);
-            myRole = "p1";
-            db.ref('rooms/' + roomCode).set({ 
-                p1_hp: 100, p2_hp: 100, p1_char: p1Char, p1_name: playerName,
-                p2_char: "", p2_name: "Bekleniyor...", status: "waiting" 
-            }).then(() => {
-                alert("ODA KODUN: " + roomCode);
-                document.getElementById('selection').style.display='none'; 
-                document.getElementById('arena').style.display='flex';
-                document.getElementById('display-name1').innerText = playerName;
-                document.getElementById('char1').innerText = charMap[p1Char];
-                listenRoom();
+            roomCode = Math.floor(1000 + Math.random() * 9000); myRole = "p1";
+            db.ref('rooms/'+roomCode).set({p1_hp:charData[myChar].hp, p1_char:myChar, p1_name:pName, p2_name:"Bekleniyor...", status:"waiting"}).then(() => {
+                alert("ODA KODUN: " + roomCode); uiStart(); listen();
             });
         } else if(mode === 'join') {
-            roomCode = prompt("Oda Kodunu Gir:");
-            if(!roomCode) return;
-            myRole = "p2";
-            db.ref('rooms/' + roomCode).once('value').then(snap => {
-                if(snap.exists()) {
-                    db.ref('rooms/' + roomCode).update({ 
-                        p2_char: p1Char, p2_name: playerName, status: "playing" 
-                    });
-                    document.getElementById('selection').style.display='none'; 
-                    document.getElementById('arena').style.display='flex';
-                    listenRoom();
-                } else { alert("Oda bulunamadı!"); location.reload(); }
+            roomCode = prompt("Oda Kodu:"); myRole = "p2";
+            if(!roomCode) return location.reload();
+            db.ref('rooms/'+roomCode).update({p2_hp:charData[myChar].hp, p2_char:myChar, p2_name:pName, status:"playing"}).then(() => {
+                uiStart(); listen();
             });
         }
     }
 
-    function listenRoom() {
-        db.ref('rooms/' + roomCode).on('value', (snap) => {
-            const data = snap.val(); if(!data) return;
+    function uiStart() {
+        document.getElementById('selection').style.display='none';
+        document.getElementById('arena').style.display='flex';
+        document.getElementById('ctrl').style.display='flex';
+    }
+
+    function listen() {
+        db.ref('rooms/'+roomCode).on('value', snap => {
+            if(isGameOver) return;
+            const d = snap.val(); if(!d) return;
             
             if(myRole === "p1") {
-                hp1 = data.p1_hp; hp2 = data.p2_hp;
-                document.getElementById('display-name2').innerText = data.p2_name;
-                if(data.p2_char) document.getElementById('char2').innerText = charMap[data.p2_char];
+                hp1 = d.p1_hp; hp2 = d.p2_hp || 0;
+                max1 = charData[d.p1_char].hp; 
+                max2 = d.p2_char ? charData[d.p2_char].hp : 100;
+                document.getElementById('n1').innerText = d.p1_name + " ("+hp1+")";
+                document.getElementById('n2').innerText = (d.p2_name || "Bekleniyor...") + " ("+hp2+")";
+                if(d.p2_char) document.getElementById('char2').innerText = charData[d.p2_char].e;
             } else {
-                hp1 = data.p2_hp; hp2 = data.p1_hp;
-                document.getElementById('display-name1').innerText = data.p2_name + " (Sen)";
-                document.getElementById('display-name2').innerText = data.p1_name;
-                document.getElementById('char1').innerText = charMap[data.p2_char];
-                document.getElementById('char2').innerText = charMap[data.p1_char];
+                hp1 = d.p2_hp; hp2 = d.p1_hp || 0;
+                max1 = charData[d.p2_char].hp; 
+                max2 = charData[d.p1_char].hp;
+                document.getElementById('n1').innerText = d.p2_name + " ("+hp1+")";
+                document.getElementById('n2').innerText = d.p1_name + " ("+hp2+")";
+                document.getElementById('char1').innerText = charData[d.p2_char].e;
+                document.getElementById('char2').innerText = charData[d.p1_char].e;
             }
-
-            if(data.status === "playing") {
-                document.getElementById('ctrl').style.display = 'flex';
-            }
-            
             upHUD();
-            if(hp1 <= 0 || hp2 <= 0) checkWin();
+            
+            // ÖLÜM KONTROLÜ
+            if(hp1 <= 0 || (hp2 <= 0 && d.status === "playing")) {
+                finish();
+            }
         });
     }
 
-    function hitRequest() {
-        // Görsel efekt
-        const box = document.getElementById('box1');
-        box.style.transform = "translateX(40px)";
-        setTimeout(() => box.style.transform = "translateX(0)", 100);
+    function hit() {
+        if(hp2 <= 0 || hp1 <= 0 || isGameOver) return;
+        let d = charData[myChar].dmg;
+        let isCrit = Math.random() < 0.15;
+        if(isCrit) d *= 2;
 
-        if(mode === 'bot') { hp2 -= 10; upHUD(); if(hp2 <= 0) checkWin(); return; }
+        pop(isCrit ? "KRİTİK! -"+d : "-"+d, isCrit ? "#f1c40f" : "#fff");
+        document.getElementById('box1').style.transform = "translateX(45px)";
+        setTimeout(() => document.getElementById('box1').style.transform = "none", 100);
         
-        if(myRole === "p1") {
-            db.ref('rooms/' + roomCode).update({ p2_hp: Math.max(0, hp2 - 10) });
+        hp2 = Math.max(0, hp2 - d); 
+        upHUD();
+
+        if(mode === 'bot') {
+            if(hp2 <= 0) finish();
         } else {
-            db.ref('rooms/' + roomCode).update({ p1_hp: Math.max(0, hp2 - 10) });
+            let target = myRole === "p1" ? "p2_hp" : "p1_hp";
+            db.ref('rooms/'+roomCode).update({[target]: hp2});
         }
+    }
+
+    function useAbi() {
+        if(!abiReady || hp1 <= 0 || hp2 <= 0 || isGameOver) return;
+        abiReady = false; 
+        const btn = document.getElementById('abi-btn'); btn.disabled = true;
+
+        let val = charData[myChar].val;
+        
+        if(myChar === "Angela") {
+            hp1 = Math.min(max1, hp1 + val);
+            pop("+"+val+" CAN", "#2ecc71");
+            if(mode !== 'bot') db.ref('rooms/'+roomCode).update({[myRole+'_hp']: hp1});
+        } else if(myChar === "Roy") {
+            hp1 = Math.min(max1, hp1 + val);
+            hp2 = Math.max(0, hp2 - val);
+            pop("CAN ÇALINDI!", "#e74c3c");
+            if(mode !== 'bot') {
+                let t = myRole === "p1" ? "p2_hp" : "p1_hp";
+                db.ref('rooms/'+roomCode).update({[t]: hp2, [myRole+'_hp']: hp1});
+            }
+        } else {
+            hp2 = Math.max(0, hp2 - val);
+            pop(charData[myChar].abi.toUpperCase() + "!", "#9b59b6");
+            if(mode !== 'bot') {
+                let t = myRole === "p1" ? "p2_hp" : "p1_hp";
+                db.ref('rooms/'+roomCode).update({[t]: hp2});
+            }
+        }
+
+        upHUD();
+        if(hp2 <= 0) finish();
+
+        let cd = 10;
+        let t = setInterval(() => {
+            cd--; btn.innerText = "BEKLE ("+cd+")";
+            if(cd <= 0) { clearInterval(t); abiReady = true; btn.disabled = false; btn.innerText = "SÜPER GÜÇ 🌟"; }
+        }, 1000);
+    }
+
+    function botHit(dmg) {
+        if(isGameOver) return;
+        hp1 = Math.max(0, hp1 - dmg);
+        document.getElementById('arena').classList.add('shake');
+        setTimeout(() => document.getElementById('arena').classList.remove('shake'), 200);
+        upHUD();
+        if(hp1 <= 0) finish();
     }
 
     function upHUD() {
-        document.getElementById('h1').style.width = hp1 + "%"; 
-        document.getElementById('h2').style.width = hp2 + "%";
-        document.getElementById('h1').classList.toggle('hp-critical', hp1 < 30);
-        document.getElementById('h2').classList.toggle('hp-critical', hp2 < 30);
+        document.getElementById('h1').style.width = (hp1/max1*100) + "%";
+        document.getElementById('h2').style.width = (hp2/max2*100) + "%";
     }
 
-    function checkWin() {
-        let win = hp2 <= 0;
-        db.ref('rooms/' + roomCode).off(); // Dinlemeyi durdur
-        
-        if(win) {
-            kupa += 100;
-            localStorage.setItem('kupa', kupa);
-            alert("TEBRİKLER! KAZANDIN 🏆");
-        } else {
-            alert("KAYBETTİN! 💀");
-        }
+    function pop(t, c) {
+        const p = document.getElementById('pop');
+        p.innerText = t; p.style.color = c; p.style.display = "block";
+        p.style.left = "40%"; p.style.top = "40%";
+        setTimeout(() => p.style.display = "none", 800);
+    }
 
-        if(roomCode && myRole === "p1") db.ref('rooms/' + roomCode).remove();
-        location.reload();
+    function finish() {
+        if(isGameOver) return;
+        isGameOver = true;
+        
+        let win = hp1 > 0;
+        document.getElementById('atk-btn').disabled = true;
+        document.getElementById('abi-btn').disabled = true;
+
+        setTimeout(() => {
+            if(win) { 
+                kupa += 100; 
+                localStorage.setItem('kupa', kupa); 
+                alert("ZAFER! 🏆 +100 Kupa"); 
+            } else { 
+                alert("BOZGUN! 💀 Rakip kazandı."); 
+            }
+            
+            if(mode !== 'bot' && myRole === "p1") db.ref('rooms/'+roomCode).remove();
+            location.reload();
+        }, 500);
     }
 
     function openShop() { document.getElementById('shop').style.display='flex'; }
     function closeShop() { document.getElementById('shop').style.display='none'; }
     function buyB() {
         if(kupa >= 1000) {
-            let list = chars.filter(x => !unlocked.includes(x));
+            let list = Object.keys(charData).filter(x => !unlocked.includes(x));
             if(list.length > 0) {
-                kupa -= 1000;
-                let won = list[Math.floor(Math.random()*list.length)];
-                unlocked.push(won);
-                localStorage.setItem('unlocked', JSON.stringify(unlocked));
-                localStorage.setItem('kupa', kupa);
-                alert("Kutudan " + won + " Çıktı! 🎉");
-                location.reload();
-            } else alert("Tüm karakterler zaten açık!");
-        } else alert("Yetersiz Kupa! ❌");
+                kupa -= 1000; let won = list[Math.floor(Math.random()*list.length)];
+                unlocked.push(won); localStorage.setItem('unlocked', JSON.stringify(unlocked));
+                localStorage.setItem('kupa', kupa); alert("YENİ KARAKTER: " + won); location.reload();
+            } else alert("Tüm karakterler açık!");
+        } else alert("Yetersiz Kupa (1000 Kupa Lazım)!");
     }
 </script>
 </body>

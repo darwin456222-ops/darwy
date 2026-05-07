@@ -72,13 +72,12 @@
 <script>
     // --- FOTOĞRAF LİNKLERİ BURAYA ---
     const petPhotos = {
-        Squeak: "SENİN_RAW_SQUEAK_JPG_LINKIN",
-        Flip:   "SENİN_RAW_FLIP_JPG_LINKIN",
-        Sugar:  "SENİN_RAW_SUGAR_JPG_LINKIN",
-        Dot:    "SENİN_RAW_DOT_JPG_LINKIN",
-        Gus:    "SENİN_RAW_GUS_JPG_LINKIN",
-        Blinky: "SENİN_RAW_BLINKY_JPG_LINKIN"
-    };
+        Squeak: "Squeak.jpg",
+        Flip:   "Flip.jpg",
+        Sugar:  Sugar.jpg",
+        Dot:    "Dot.jpg",
+        Gus:    "Gus.jpg",
+        Blinky: "Blinky.jpg"
     // --------------------------------
 
     // Kim kiminle dövüşüyor? (Rastgele seçelim)

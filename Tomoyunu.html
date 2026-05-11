@@ -2,93 +2,81 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tom Online: Final Strike</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Arena of Pets: Ultimate</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #000; color: #fff; touch-action: none; user-select: none; overflow: hidden; }
-        #top-bar { position: fixed; top: 0; width: 100%; background: #222; z-index: 2000; padding: 10px 0; border-bottom: 2px solid #f39c12; text-align: center; }
+        :root { --accent: #00d2ff; --bg: #121212; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
         
-        #menu, #shop, #selection { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a2a6c, #000); }
-        #selection { display: none; padding-top: 80px; overflow-y: auto; justify-content: flex-start; background: #111; }
+        #nav { position: fixed; top: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--accent); z-index: 1000; }
+        .currency { font-size: 20px; font-weight: bold; color: #fbc531; }
+
+        .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; background: var(--bg); padding-top: 60px; }
         
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 95%; padding-bottom: 20px; }
-        .item { background: #222; border: 2px solid #444; border-radius: 10px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; text-align: center; }
-        .stats-tag { font-size: 9px; color: #f1c40f; margin-top: 3px; }
-        .abi-desc { font-size: 8px; color: #9b59b6; margin-top: 2px; padding: 0 5px; }
-        .locked { filter: grayscale(1) brightness(0.3); }
+        /* Karakter Kartları */
+        .hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 90%; padding: 20px 0; overflow-y: auto; }
+        .hero-card { background: #252525; border-radius: 15px; padding: 10px; border: 2px solid #333; text-align: center; }
+        .hero-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
+        .hero-card.locked { opacity: 0.3; filter: grayscale(1); }
+        .hero-name { font-size: 14px; color: var(--accent); font-weight: bold; }
 
-        #arena { height: 50vh; background: #1a1a2a; position: relative; display: none; align-items: flex-end; justify-content: center; border-bottom: 4px solid #000; overflow: hidden; }
-        .shake { animation: shakeAnim 0.2s; }
-        @keyframes shakeAnim { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-4px, 0); } 75% { transform: translate(4px, 0); } }
-
-        .hud { position: absolute; top: 70px; width: 92%; display: flex; justify-content: space-between; z-index: 10; }
-        .bar-wrap { width: 45%; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 6px; }
-        .b-bg { width: 100%; height: 16px; background: #333; border-radius: 8px; overflow: hidden; }
-        .hp-f { height: 100%; background: #4cd137; width: 100%; transition: 0.2s; }
+        /* Savaş Alanı Görselleri */
+        .battle-view { flex: 1; position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 60px; }
+        .char-img { width: 120px; height: 120px; object-fit: contain; transition: 0.2s; }
         
-        #ctrl { height: 50vh; display: none; background: #001; flex-direction: column; justify-content: center; align-items: center; gap: 10px; }
-        .atk-btn { width: 85%; height: 65px; background: linear-gradient(#e74c3c, #c0392b); color: #fff; font-size: 24px; font-weight: bold; border: none; border-radius: 35px; box-shadow: 0 6px #880000; cursor: pointer; }
-        .abi-btn { width: 85%; height: 55px; background: linear-gradient(#9b59b6, #8e44ad); color: #fff; font-size: 18px; font-weight: bold; border: none; border-radius: 25px; box-shadow: 0 5px #4b0082; cursor: pointer; }
-        .abi-btn:disabled { background: #444; box-shadow: none; opacity: 0.6; }
+        .hp-container { position: absolute; top: 80px; width: 90%; display: flex; justify-content: space-between; }
+        .hp-bar { width: 45%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #000; }
+        .hp-fill { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
 
-        .char-box { position: absolute; bottom: 20px; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .emoji-v { font-size: 95px; }
+        #actions { height: 140px; width: 100%; background: #1a1a1a; display: none; align-items: center; justify-content: space-around; padding: 0 15px; border-top: 2px solid #333; }
+        .btn-game { flex: 1; margin: 0 5px; height: 60px; border-radius: 12px; border: none; font-weight: bold; color: #fff; font-size: 16px; }
+        .atk { background: #e84118; box-shadow: 0 4px #800; }
         
-        #pop { position: absolute; font-weight: bold; font-size: 26px; pointer-events: none; animation: float 0.8s forwards; display: none; z-index: 100; text-shadow: 2px 2px #000; }
-        @keyframes float { 0% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-80px); } }
-
-        .btn { width: 220px; padding: 15px; margin: 8px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px #000; }
-        .input-name { padding: 12px; border-radius: 15px; border: 2px solid #f39c12; width: 200px; text-align: center; margin-bottom: 10px; font-weight: bold; }
+        .btn-menu { width: 240px; padding: 15px; margin: 8px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="pop"></div>
-
-<div id="top-bar">
-    <div style="color:#f1c40f; font-weight:bold;">🏆 <span id="k-txt">0</span></div>
+<div id="nav">
+    <div class="currency">🪙 <span id="gold-txt">0</span></div>
 </div>
 
-<div id="menu">
-    <h1 style="text-shadow: 2px 2px #000; color:#f39c12;">TOM ONLINE ⚔️</h1>
-    <input type="text" id="playerNameInput" class="input-name" placeholder="İsim..." maxlength="10">
-    <button class="btn" style="background:#2ecc71; color:#fff;" onclick="openS('bot')">🤖 TEK OYUNCU</button>
-    <button class="btn" style="background:#3498db; color:#fff;" onclick="openS('create')">🏠 ODA KUR</button>
-    <button class="btn" style="background:#9b59b6; color:#fff;" onclick="openS('join')">🔑 KATIL</button>
-    <button class="btn" style="background:#f1c40f" onclick="openShop()">🏪 DÜKKAN</button>
+<div id="home" class="page">
+    <h1 style="color: var(--accent);">ARENA OF PETS</h1>
+    <button class="btn-menu" style="background:var(--accent);" onclick="openSelection()">OYUNA BAŞLA</button>
+    <button class="btn-menu" style="background:#fbc531;" onclick="toggleShop(true)">SANDIK AÇ (500 🪙)</button>
 </div>
 
-<div id="shop" style="display:none">
-    <div style="font-size:80px; margin-bottom:20px;">🎁</div>
-    <button class="btn" style="background:#2ecc71" onclick="buyB()">1000 🏆 MEGA KUTU</button>
-    <button class="btn" style="background:#444" onclick="closeShop()">GERİ</button>
+<div id="shop" class="page" style="display:none;">
+    <h2>GİZEMLİ SANDIK</h2>
+    <p>Yeni bir karakter çıkart!</p>
+    <button class="btn-menu" style="background:#fbc531;" onclick="buyChest()">500 🪙 AÇ</button>
+    <button class="btn-menu" style="background:#444; color:#fff;" onclick="toggleShop(false)">GERİ</button>
 </div>
 
-<div id="selection"><div class="grid" id="grid"></div></div>
+<div id="selection" class="page" style="display:none; justify-content: flex-start;">
+    <button class="btn-menu" style="background:#333; color:#fff; width:90%;" onclick="location.reload()">İPTAL</button>
+    <div class="hero-grid" id="hero-list"></div>
+</div>
 
-<div id="arena">
-    <div class="hud">
-        <div class="bar-wrap">
-            <div class="b-bg"><div id="h1" class="hp-f"></div></div>
-            <div id="n1" style="font-size:11px; margin-top:4px; font-weight:bold;">...</div>
-        </div>
-        <div class="bar-wrap" style="text-align:right">
-            <div class="b-bg"><div id="h2" class="hp-f"></div></div>
-            <div id="n2" style="font-size:11px; margin-top:4px; font-weight:bold;">...</div>
-        </div>
+<div id="arena" class="page" style="display:none;">
+    <div class="hp-container">
+        <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
+        <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
     </div>
-    
-    <div id="box1" class="char-box" style="left:10%;"><span id="char1" class="emoji-v">🐱</span></div>
-    <div id="box2" class="char-box" style="right:10%;"><span id="char2" class="emoji-v flip">❓</span></div>
+    <div class="battle-view">
+        <img id="p1-img" class="char-img" src="">
+        <img id="p2-img" class="char-img" src="" style="transform: scaleX(-1);">
+    </div>
 </div>
 
-<div id="ctrl">
-    <button id="atk-btn" class="atk-btn" onclick="hit()">⚡ SALDIR</button>
-    <button id="abi-btn" class="abi-btn" onclick="useAbi()">🌟 SÜPER GÜÇ</button>
+<div id="actions">
+    <button class="btn-game atk" onclick="doAttack()">SALDIRI</button>
 </div>
 
 <script>
@@ -96,222 +84,105 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const charData = {
-        "Tom": { e: "🐱", hp: 110, dmg: 10, abi: "Süper Pençe", val: 25 },
-        "Angela": { e: "🐈", hp: 95, dmg: 11, abi: "İyileşme", val: 35 },
-        "Hank": { e: "🐶", hp: 140, dmg: 8, abi: "Büyük Isırık", val: 30 },
-        "Becca": { e: "🐰", hp: 85, dmg: 15, abi: "Hızlı Atak", val: 28 },
-        "Ben": { e: "🐕", hp: 120, dmg: 10, abi: "Lazer", val: 22 },
-        "Ginger": { e: "😼", hp: 80, dmg: 18, abi: "Roket", val: 35 },
-        "Hippo": { e: "🦛", hp: 220, dmg: 7, abi: "Ezme", val: 25 },
-        "Ginna": { e: "🦒", hp: 100, dmg: 13, abi: "Kuyruk", val: 24 },
-        "Roy": { e: "🦝", hp: 110, dmg: 12, abi: "Can Çalması", val: 15 },
-        "Gus": { e: "🦔", hp: 150, dmg: 9, abi: "Zıplama", val: 25 },
-        "Flip": { e: "🦜", hp: 95, dmg: 13, abi: "Kuş Tüyleri", val: 20 },
-        "Squeak": { e: "🐹", hp: 75, dmg: 20, abi: "Jelibon", val: 40 },
-        "Blinky": { e: " 🦭", hp: 115, dmg: 11, abi: "Süper Vuruş", val: 25 },
-        "Dot": { e: "🐨", hp: 130, dmg: 10, abi: "Elektrik Çarpması", val: 25 },
-        "Sugar": { e: "🦄", hp: 105, dmg: 14, abi: "Sihir", val: 30 }
+    // Senin Yüklediğin Fotoğraflara Göre Karakterler
+    const PETS = {
+        "Sunny": { img: "sunny.jpg", hp: 120, dmg: 10 },
+        "Browny": { img: "browny.jpg", hp: 110, dmg: 12 },
+        "Pinky": { img: "pinky.jpg", hp: 100, dmg: 14 },
+        "Sleapy": { img: "sleapy.jpg", hp: 150, dmg: 8 },
+        "Dinory": { img: "dinory.jpg", hp: 180, dmg: 7 },
+        "Stary": { img: "stary.jpg", hp: 90, dmg: 18 }
     };
 
-    let kupa = parseInt(localStorage.getItem('kupa')) || 0;
-    let unlocked = JSON.parse(localStorage.getItem('unlocked')) || ["Tom","Angela"];
-    let pName = localStorage.getItem('p_name') || "Oyuncu";
-    let myChar, hp1, hp2, max1, max2, mode, roomCode, myRole, abiReady = true, isGameOver = false;
+    let gold = parseInt(localStorage.getItem('pet_gold_v2')) || 0;
+    let unlocked = JSON.parse(localStorage.getItem('pet_unl_v2')) || ["Sunny", "Browny"];
+    let myPet, enemyPet, isPlaying = false, p1HP, p2HP, m1, m2;
 
-    document.getElementById('playerNameInput').value = pName;
-    document.getElementById('k-txt').innerText = kupa;
+    function sync() {
+        document.getElementById('gold-txt').innerText = gold;
+        localStorage.setItem('pet_gold_v2', gold);
+        localStorage.setItem('pet_unl_v2', JSON.stringify(unlocked));
+    }
+    sync();
 
-    function openS(m) {
-        mode = m; pName = document.getElementById('playerNameInput').value || "Oyuncu";
-        localStorage.setItem('p_name', pName);
-        document.getElementById('menu').style.display='none'; 
-        document.getElementById('selection').style.display='flex';
-        const g = document.getElementById('grid'); g.innerHTML = "";
-        Object.keys(charData).forEach(n => {
-            let lock = !unlocked.includes(n);
-            let d = document.createElement('div'); d.className = 'item' + (lock?' locked':'');
-            d.innerHTML = `<span>${charData[n].e}</span><div class="stats-tag">HP:${charData[n].hp} ATK:${charData[n].dmg}</div><div class="abi-desc">${charData[n].abi}</div>`;
-            if(!lock) d.onclick = () => { myChar=n; start(); };
-            g.appendChild(d);
+    function openSelection() {
+        document.getElementById('home').style.display = 'none';
+        document.getElementById('selection').style.display = 'flex';
+        const list = document.getElementById('hero-list');
+        list.innerHTML = "";
+        
+        Object.keys(PETS).forEach(name => {
+            const locked = !unlocked.includes(name);
+            const card = document.createElement('div');
+            card.className = `hero-card ${locked ? 'locked' : ''}`;
+            card.innerHTML = `<img src="${PETS[name].img}"><div class="hero-name">${name}</div>`;
+            if(!locked) card.onclick = () => startBattle(name);
+            list.appendChild(card);
         });
     }
 
-    function start() {
-        if(mode === 'bot') {
-            let botC = Object.keys(charData)[Math.floor(Math.random()*15)];
-            max1 = charData[myChar].hp; hp1 = max1;
-            max2 = charData[botC].hp; hp2 = max2;
-            document.getElementById('char1').innerText = charData[myChar].e;
-            document.getElementById('char2').innerText = charData[botC].e;
-            uiStart();
-            let botInt = setInterval(() => { 
-                if(hp1 > 0 && hp2 > 0) botHit(charData[botC].dmg); 
-                else clearInterval(botInt);
-            }, 2000);
-        } else if(mode === 'create') {
-            roomCode = Math.floor(1000 + Math.random() * 9000); myRole = "p1";
-            db.ref('rooms/'+roomCode).set({p1_hp:charData[myChar].hp, p1_char:myChar, p1_name:pName, p2_name:"Bekleniyor...", status:"waiting"}).then(() => {
-                alert("ODA KODUN: " + roomCode); uiStart(); listen();
-            });
-        } else if(mode === 'join') {
-            roomCode = prompt("Oda Kodu:"); myRole = "p2";
-            if(!roomCode) return location.reload();
-            db.ref('rooms/'+roomCode).update({p2_hp:charData[myChar].hp, p2_char:myChar, p2_name:pName, status:"playing"}).then(() => {
-                uiStart(); listen();
-            });
-        }
-    }
-
-    function uiStart() {
-        document.getElementById('selection').style.display='none';
-        document.getElementById('arena').style.display='flex';
-        document.getElementById('ctrl').style.display='flex';
-    }
-
-    function listen() {
-        db.ref('rooms/'+roomCode).on('value', snap => {
-            if(isGameOver) return;
-            const d = snap.val(); if(!d) return;
-            
-            if(myRole === "p1") {
-                hp1 = d.p1_hp; hp2 = d.p2_hp || 0;
-                max1 = charData[d.p1_char].hp; 
-                max2 = d.p2_char ? charData[d.p2_char].hp : 100;
-                document.getElementById('n1').innerText = d.p1_name + " ("+hp1+")";
-                document.getElementById('n2').innerText = (d.p2_name || "Bekleniyor...") + " ("+hp2+")";
-                if(d.p2_char) document.getElementById('char2').innerText = charData[d.p2_char].e;
-            } else {
-                hp1 = d.p2_hp; hp2 = d.p1_hp || 0;
-                max1 = charData[d.p2_char].hp; 
-                max2 = charData[d.p1_char].hp;
-                document.getElementById('n1').innerText = d.p2_name + " ("+hp1+")";
-                document.getElementById('n2').innerText = d.p1_name + " ("+hp2+")";
-                document.getElementById('char1').innerText = charData[d.p2_char].e;
-                document.getElementById('char2').innerText = charData[d.p1_char].e;
-            }
-            upHUD();
-            
-            // ÖLÜM KONTROLÜ
-            if(hp1 <= 0 || (hp2 <= 0 && d.status === "playing")) {
-                finish();
-            }
-        });
-    }
-
-    function hit() {
-        if(hp2 <= 0 || hp1 <= 0 || isGameOver) return;
-        let d = charData[myChar].dmg;
-        let isCrit = Math.random() < 0.15;
-        if(isCrit) d *= 2;
-
-        pop(isCrit ? "KRİTİK! -"+d : "-"+d, isCrit ? "#f1c40f" : "#fff");
-        document.getElementById('box1').style.transform = "translateX(45px)";
-        setTimeout(() => document.getElementById('box1').style.transform = "none", 100);
+    function startBattle(name) {
+        myPet = name;
+        const keys = Object.keys(PETS);
+        enemyPet = keys[Math.floor(Math.random()*keys.length)];
         
-        hp2 = Math.max(0, hp2 - d); 
-        upHUD();
-
-        if(mode === 'bot') {
-            if(hp2 <= 0) finish();
-        } else {
-            let target = myRole === "p1" ? "p2_hp" : "p1_hp";
-            db.ref('rooms/'+roomCode).update({[target]: hp2});
-        }
-    }
-
-    function useAbi() {
-        if(!abiReady || hp1 <= 0 || hp2 <= 0 || isGameOver) return;
-        abiReady = false; 
-        const btn = document.getElementById('abi-btn'); btn.disabled = true;
-
-        let val = charData[myChar].val;
+        document.getElementById('selection').style.display = 'none';
+        document.getElementById('arena').style.display = 'flex';
+        document.getElementById('actions').style.display = 'flex';
         
-        if(myChar === "Angela") {
-            hp1 = Math.min(max1, hp1 + val);
-            pop("+"+val+" CAN", "#2ecc71");
-            if(mode !== 'bot') db.ref('rooms/'+roomCode).update({[myRole+'_hp']: hp1});
-        } else if(myChar === "Roy") {
-            hp1 = Math.min(max1, hp1 + val);
-            hp2 = Math.max(0, hp2 - val);
-            pop("CAN ÇALINDI!", "#e74c3c");
-            if(mode !== 'bot') {
-                let t = myRole === "p1" ? "p2_hp" : "p1_hp";
-                db.ref('rooms/'+roomCode).update({[t]: hp2, [myRole+'_hp']: hp1});
-            }
-        } else {
-            hp2 = Math.max(0, hp2 - val);
-            pop(charData[myChar].abi.toUpperCase() + "!", "#9b59b6");
-            if(mode !== 'bot') {
-                let t = myRole === "p1" ? "p2_hp" : "p1_hp";
-                db.ref('rooms/'+roomCode).update({[t]: hp2});
-            }
-        }
-
-        upHUD();
-        if(hp2 <= 0) finish();
-
-        let cd = 10;
-        let t = setInterval(() => {
-            cd--; btn.innerText = "BEKLE ("+cd+")";
-            if(cd <= 0) { clearInterval(t); abiReady = true; btn.disabled = false; btn.innerText = "SÜPER GÜÇ 🌟"; }
-        }, 1000);
-    }
-
-    function botHit(dmg) {
-        if(isGameOver) return;
-        hp1 = Math.max(0, hp1 - dmg);
-        document.getElementById('arena').classList.add('shake');
-        setTimeout(() => document.getElementById('arena').classList.remove('shake'), 200);
-        upHUD();
-        if(hp1 <= 0) finish();
-    }
-
-    function upHUD() {
-        document.getElementById('h1').style.width = (hp1/max1*100) + "%";
-        document.getElementById('h2').style.width = (hp2/max2*100) + "%";
-    }
-
-    function pop(t, c) {
-        const p = document.getElementById('pop');
-        p.innerText = t; p.style.color = c; p.style.display = "block";
-        p.style.left = "40%"; p.style.top = "40%";
-        setTimeout(() => p.style.display = "none", 800);
-    }
-
-    function finish() {
-        if(isGameOver) return;
-        isGameOver = true;
+        document.getElementById('p1-img').src = PETS[myPet].img;
+        document.getElementById('p2-img').src = PETS[enemyPet].img;
         
-        let win = hp1 > 0;
-        document.getElementById('atk-btn').disabled = true;
-        document.getElementById('abi-btn').disabled = true;
-
-        setTimeout(() => {
-            if(win) { 
-                kupa += 100; 
-                localStorage.setItem('kupa', kupa); 
-                alert("ZAFER! 🏆 +100 Kupa"); 
-            } else { 
-                alert("BOZGUN! 💀 Rakip kazandı."); 
-            }
-            
-            if(mode !== 'bot' && myRole === "p1") db.ref('rooms/'+roomCode).remove();
-            location.reload();
-        }, 500);
+        p1HP = PETS[myPet].hp; m1 = p1HP;
+        p2HP = PETS[enemyPet].hp; m2 = p2HP;
+        isPlaying = true;
+        updateBars();
+        
+        const bot = setInterval(() => {
+            if(!isPlaying) return clearInterval(bot);
+            p1HP -= (PETS[enemyPet].dmg - 2);
+            updateBars();
+            if(p1HP <= 0) finalize(false);
+        }, 2500);
     }
 
-    function openShop() { document.getElementById('shop').style.display='flex'; }
-    function closeShop() { document.getElementById('shop').style.display='none'; }
-    function buyB() {
-        if(kupa >= 1000) {
-            let list = Object.keys(charData).filter(x => !unlocked.includes(x));
-            if(list.length > 0) {
-                kupa -= 1000; let won = list[Math.floor(Math.random()*list.length)];
-                unlocked.push(won); localStorage.setItem('unlocked', JSON.stringify(unlocked));
-                localStorage.setItem('kupa', kupa); alert("YENİ KARAKTER: " + won); location.reload();
-            } else alert("Tüm karakterler açık!");
-        } else alert("Yetersiz Kupa (1000 Kupa Lazım)!");
+    function doAttack() {
+        if(!isPlaying) return;
+        p2HP -= PETS[myPet].dmg;
+        document.getElementById('p2-img').style.transform = "scaleX(-1) translateX(-20px)";
+        setTimeout(() => document.getElementById('p2-img').style.transform = "scaleX(-1)", 100);
+        updateBars();
+        if(p2HP <= 0) finalize(true);
+    }
+
+    function updateBars() {
+        document.getElementById('hp-p1').style.width = (p1HP/m1*100) + "%";
+        document.getElementById('hp-p2').style.width = (p2HP/m2*100) + "%";
+    }
+
+    function finalize(win) {
+        isPlaying = false;
+        if(win) { gold += 100; sync(); alert("TEBRİKLER! +100 🪙"); }
+        else alert("YENİLDİN!");
+        location.reload();
+    }
+
+    function toggleShop(s) {
+        document.getElementById('shop').style.display = s ? 'flex' : 'none';
+        document.getElementById('home').style.display = s ? 'none' : 'flex';
+    }
+
+    function buyChest() {
+        if(gold < 500) return alert("Yetersiz altın!");
+        const lockeds = Object.keys(PETS).filter(p => !unlocked.includes(p));
+        if(lockeds.length === 0) return alert("Tüm karakterler açık!");
+        
+        gold -= 500;
+        const prize = lockeds[Math.floor(Math.random()*lockeds.length)];
+        unlocked.push(prize);
+        sync();
+        alert("YENİ KARAKTER: " + prize);
+        location.reload();
     }
 </script>
 </body>

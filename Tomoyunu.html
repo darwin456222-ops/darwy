@@ -3,82 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arena of Pets: Shop Edition</title>
+    <title>Arena of Pets: Ultimate Battle</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
         :root { --accent: #00d2ff; --bg: #121212; --danger: #e84118; --special: #9b59b6; --gold: #fbc531; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
         
-        #nav { position: fixed; top: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--accent); z-index: 1000; }
-        .currency { font-size: 22px; font-weight: bold; color: var(--gold); text-shadow: 0 0 10px rgba(251, 197, 49, 0.4); }
+        #nav { position: fixed; top: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--accent); z-index: 5000; }
+        .currency { font-size: 22px; font-weight: bold; color: var(--gold); }
 
-        .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; background: var(--bg); padding-top: 60px; }
+        .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; background: var(--bg); }
         
-        /* Dükkan ve Karakter Kartları */
-        .hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 90%; padding: 20px; overflow-y: auto; }
-        .hero-card { background: #252525; border-radius: 15px; padding: 10px; border: 2px solid #333; text-align: center; position: relative; }
-        .hero-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; }
-        .locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-
-        /* Arena */
-        #arena { display: none; background: radial-gradient(circle, #2c3e50, #000); }
-        .battle-view { flex: 1; position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 60px; }
-        .char-img { width: 130px; height: 130px; object-fit: contain; transition: 0.1s; }
+        /* Arena Düzeni */
+        #arena { display: none; background: radial-gradient(circle, #2c3e50, #000); z-index: 3000; flex-direction: column; }
+        .battle-view { flex: 1; position: relative; width: 100%; display: flex; align-items: center; justify-content: space-around; padding-bottom: 20px; }
+        .char-img { width: 150px; height: 150px; object-fit: contain; transition: 0.1s; z-index: 3001; }
         
-        .hp-container { position: absolute; top: 80px; width: 90%; display: flex; justify-content: space-between; }
-        .hp-bar { width: 45%; height: 14px; background: #333; border-radius: 7px; overflow: hidden; border: 1px solid #000; }
+        .hp-container { position: absolute; top: 80px; width: 90%; display: flex; justify-content: space-between; z-index: 3005; }
+        .hp-bar { width: 45%; height: 16px; background: #333; border-radius: 8px; overflow: hidden; border: 2px solid #000; }
         .hp-fill { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
 
-        /* Butonlar */
-        #actions { height: 180px; width: 100%; background: #1a1a1a; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 10px; border-top: 3px solid #333; z-index: 4000; }
-        .btn-row { display: flex; width: 100%; gap: 10px; }
-        .btn-game { flex: 1; height: 70px; border-radius: 15px; border: none; font-weight: bold; color: #fff; font-size: 18px; cursor: pointer; }
-        .atk-btn { background: #ff4757; box-shadow: 0 5px #800; }
-        .spec-btn { background: #9b59b6; box-shadow: 0 5px #4b0082; }
-        .btn-game:active { transform: translateY(3px); box-shadow: none; }
-        .btn-game:disabled { background: #444; opacity: 0.5; box-shadow: none; }
+        /* BUTON PANELİ (Düzeltildi) */
+        #actions { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 120px; 
+            background: rgba(26, 26, 26, 0.95); 
+            display: none; /* JavaScript ile açılacak */
+            flex-direction: row; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 15px; 
+            padding: 15px; 
+            border-top: 3px solid #333; 
+            z-index: 6000; /* En üstte durması için */
+        }
+        .btn-game { flex: 1; height: 80px; border-radius: 15px; border: none; font-weight: 900; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); }
+        .atk-btn { background: linear-gradient(#ff4757, var(--danger)); }
+        .spec-btn { background: linear-gradient(#a29bfe, var(--special)); }
+        .btn-game:active { transform: translateY(4px); box-shadow: none; }
+        .btn-game:disabled { background: #444 !important; opacity: 0.5; box-shadow: none; }
 
-        .btn-menu { width: 260px; padding: 16px; margin: 8px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .chest-box { width: 150px; margin-bottom: 20px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .btn-menu { width: 260px; padding: 18px; margin: 10px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; width: 100%; overflow-y: auto; }
+        .hero-card { background: #252525; padding: 10px; border-radius: 15px; text-align: center; border: 2px solid #333; }
+        .hero-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div id="nav"><div class="currency">🪙 <span id="gold-txt">0</span></div></div>
 
-<!-- Ana Menü -->
 <div id="home" class="page">
-    <h1 style="color: var(--accent); margin-bottom: 30px;">ARENA OF PETS</h1>
+    <h1 style="color: var(--accent); margin-bottom: 20px;">ARENA OF PETS</h1>
     <button class="btn-menu" style="background:var(--accent);" onclick="preStart('solo')">TEK OYUNCU</button>
     <button class="btn-menu" style="background:var(--special); color:white;" onclick="preStart('create')">ODA KUR</button>
-    <button class="btn-menu" style="background:#3498db; color:white;" onclick="preStart('join')">ODAYA KATIL</button>
+    <button class="btn-menu" style="background:#3498db; color:white;" onclick="preStart('join')">KATIL</button>
     <button class="btn-menu" style="background:var(--gold);" onclick="openShop()">🏪 DÜKKAN (KUTU)</button>
 </div>
 
-<!-- Dükkan -->
 <div id="shop" class="page" style="display:none;">
     <h2 style="color:var(--gold)">EFSANEVİ SANDIK</h2>
-    <div style="font-size: 80px;" class="chest-box">🎁</div>
-    <p style="text-align:center; padding: 0 20px; color: #aaa;">İçinden Browny, Sleapy, Stary veya Dinory çıkabilir!</p>
-    <button id="buy-btn" class="btn-menu" style="background:var(--gold);" onclick="buyChest()">1000 🪙 AÇ</button>
-    <button class="btn-menu" style="background:#444; color:white;" onclick="closeShop()">GERİ DÖ</button>
+    <div style="font-size: 100px; margin: 20px;">🎁</div>
+    <button class="btn-menu" style="background:var(--gold);" onclick="buyChest()">1000 🪙 AÇ</button>
+    <button class="btn-menu" style="background:#444; color:white;" onclick="closeShop()">GERİ</button>
 </div>
 
-<!-- Seçim Ekranı -->
-<div id="selection" class="page" style="display:none; justify-content: flex-start;">
-    <h2 style="margin: 20px 0;">KARAKTER SEÇ</h2>
+<div id="selection" class="page" style="display:none; justify-content: flex-start; padding-top: 80px;">
     <div class="hero-grid" id="hero-list"></div>
-    <button class="btn-menu" style="background:#444; color:white;" onclick="location.reload()">İPTAL</button>
 </div>
 
-<!-- Arena -->
 <div id="arena" class="page">
-    <div id="room-code" style="position:absolute; top:110px; color:var(--accent); font-weight:bold;"></div>
+    <div id="room-info" style="position:absolute; top:110px; color:var(--accent); font-weight:bold;"></div>
     <div class="hp-container">
         <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
         <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
@@ -90,10 +92,8 @@
 </div>
 
 <div id="actions">
-    <div class="btn-row">
-        <button class="btn-game atk-btn" id="atk-b" onclick="doAttack()">VUR ⚔️</button>
-        <button class="btn-game spec-btn" id="s-b" onclick="doSpecial()">SÜPER 🌟</button>
-    </div>
+    <button class="btn-game atk-btn" id="atk-b" onclick="doAttack()">VUR ⚔️</button>
+    <button class="btn-game spec-btn" id="s-b" onclick="doSpecial()">SÜPER 🌟</button>
 </div>
 
 <script>
@@ -106,12 +106,11 @@
         "Pinky": { img: "pinky.jpg", hp: 110, dmg: 14, sVal: 35 },
         "Browny": { img: "browny.jpg", hp: 130, dmg: 13, sVal: 22 },
         "Sleapy": { img: "sleapy.jpg", hp: 180, dmg: 9, sVal: 30 },
-        "Stary": { img: "stary.jpg", hp: 90, dmg: 20, sVal: 45 },
-        "Dinory": { img: "dinory.jpg", hp: 200, dmg: 8, sVal: 25 }
+        "Stary": { img: "stary.jpg", hp: 95, dmg: 20, sVal: 45 },
+        "Dinory": { img: "dinory.jpg", hp: 210, dmg: 8, sVal: 25 }
     };
 
     let gold = parseInt(localStorage.getItem('pet_gold_v3')) || 0;
-    // Başlangıç karakterleri: Sunny ve Pinky
     let unlocked = JSON.parse(localStorage.getItem('pet_unl_v3')) || ["Sunny", "Pinky"];
     let myPet, mode, roomID, myRole, isPlaying = false, p1HP, p2HP, m1, m2;
 
@@ -126,60 +125,52 @@
         mode = m;
         document.getElementById('home').style.display = 'none';
         document.getElementById('selection').style.display = 'flex';
-        renderHeroes();
-    }
-
-    function renderHeroes() {
         const list = document.getElementById('hero-list');
         list.innerHTML = "";
         Object.keys(PETS).forEach(name => {
-            const isLocked = !unlocked.includes(name);
+            if(!unlocked.includes(name)) return;
             const card = document.createElement('div');
             card.className = 'hero-card';
-            card.innerHTML = `
-                <img src="${PETS[name].img}">
-                <div style="color:white; margin-top:5px;">${name}</div>
-                ${isLocked ? '<div class="locked-overlay">🔒</div>' : ''}
-            `;
-            if(!isLocked) card.onclick = () => handleGame(name);
+            card.innerHTML = `<img src="${PETS[name].img}"><p>${name}</p>`;
+            card.onclick = () => {
+                myPet = name;
+                if(mode === 'solo') startSolo();
+                else if(mode === 'create') createRoom();
+                else if(mode === 'join') joinRoom();
+            };
             list.appendChild(card);
         });
     }
 
-    function handleGame(name) {
-        myPet = name;
-        if(mode === 'solo') startSolo();
-        else if(mode === 'create') createRoom();
-        else if(mode === 'join') joinRoom();
+    function uiArena() {
+        document.getElementById('selection').style.display = 'none';
+        document.getElementById('arena').style.display = 'flex';
+        document.getElementById('actions').style.display = 'flex'; // Butonları zorla göster
     }
 
     function startSolo() {
         uiArena();
-        const enemy = Object.keys(PETS)[Math.floor(Math.random()*6)];
+        const keys = Object.keys(PETS);
+        const enemy = keys[Math.floor(Math.random()*keys.length)];
         p1HP = PETS[myPet].hp; m1 = p1HP;
         p2HP = PETS[enemy].hp; m2 = p2HP;
         document.getElementById('p1-img').src = PETS[myPet].img;
         document.getElementById('p2-img').src = PETS[enemy].img;
         isPlaying = true;
         updateBars();
-        // Bot saldırı döngüsü
-        const bot = setInterval(() => {
-            if(!isPlaying) return clearInterval(bot);
-            p1HP -= 8; updateBars();
-            if(p1HP <= 0) finalize(false);
-        }, 3000);
+        setInterval(() => { if(isPlaying) { p1HP -= 9; updateBars(); if(p1HP <= 0) finalize(false); } }, 3000);
     }
 
     function createRoom() {
         roomID = Math.floor(1000 + Math.random() * 9000);
         myRole = 'p1';
-        document.getElementById('room-code').innerText = "ODA KODU: " + roomID;
+        document.getElementById('room-info').innerText = "ODA: " + roomID;
         db.ref('rooms/' + roomID).set({ p1_hp: PETS[myPet].hp, p1_img: PETS[myPet].img, p2_hp: 0, status: 'waiting' });
         uiArena(); listenRoom();
     }
 
     function joinRoom() {
-        roomID = prompt("Oda Kodunu Girin:");
+        roomID = prompt("Oda Kodu:");
         if(!roomID) return location.reload();
         myRole = 'p2';
         db.ref('rooms/' + roomID).update({ p2_hp: PETS[myPet].hp, p2_img: PETS[myPet].img, status: 'playing' });
@@ -190,6 +181,8 @@
         db.ref('rooms/' + roomID).on('value', snap => {
             const d = snap.val(); if(!d) return;
             isPlaying = (d.status === 'playing');
+            
+            // Butonları oyun durumuna göre aktif/pasif yap
             document.getElementById('atk-b').disabled = !isPlaying;
             document.getElementById('s-b').disabled = !isPlaying;
 
@@ -214,22 +207,20 @@
     function doAttack() {
         if(!isPlaying) return;
         const dmg = PETS[myPet].dmg + Math.floor(Math.random()*5);
-        shakeEnemy();
         applyDmg(p2HP - dmg, p1HP);
+        // Vuruş efekti
+        const e = document.getElementById('p2-img');
+        e.style.filter = "brightness(2) translateX(10px)";
+        setTimeout(()=> e.style.filter="none", 100);
     }
 
     function doSpecial() {
         if(!isPlaying) return;
         const sVal = PETS[myPet].sVal;
-        const sBtn = document.getElementById('s-b');
-        sBtn.disabled = true;
-
-        if(myPet === "Pinky") {
-            applyDmg(p2HP, Math.min(m1, p1HP + sVal));
-        } else {
-            applyDmg(p2HP - sVal, p1HP);
-        }
-        setTimeout(() => { if(isPlaying) sBtn.disabled = false; }, 8000);
+        document.getElementById('s-b').disabled = true;
+        if(myPet === "Pinky") applyDmg(p2HP, Math.min(m1, p1HP + sVal));
+        else applyDmg(p2HP - sVal, p1HP);
+        setTimeout(() => { if(isPlaying) document.getElementById('s-b').disabled = false; }, 8000);
     }
 
     function applyDmg(newEHP, newMHP) {
@@ -242,12 +233,6 @@
         }
     }
 
-    function shakeEnemy() {
-        const e = document.getElementById('p2-img');
-        e.style.transform = "scaleX(-1) translateX(-20px)";
-        setTimeout(() => e.style.transform = "scaleX(-1)", 100);
-    }
-
     function updateBars() {
         document.getElementById('hp-p1').style.width = (p1HP/m1*100) + "%";
         document.getElementById('hp-p2').style.width = (p2HP/m2*100) + "%";
@@ -255,40 +240,22 @@
 
     function finalize(win) {
         isPlaying = false;
-        if(win) {
-            gold += 100; sync();
-            alert("ZAFER! 100 Altın Kazandın.");
-        } else {
-            alert("YENİLDİN!");
-        }
+        alert(win ? "TEBRİKLER! +100 Altın" : "YENİLDİN!");
+        if(win) { gold += 100; sync(); }
         if(roomID && myRole === 'p1') db.ref('rooms/' + roomID).remove();
         location.reload();
     }
 
-    /* Dükkan Fonksiyonları */
-    function openShop() { document.getElementById('home').style.display = 'none'; document.getElementById('shop').style.display = 'flex'; }
-    function closeShop() { document.getElementById('shop').style.display = 'none'; document.getElementById('home').style.display = 'flex'; }
-
+    function openShop() { document.getElementById('home').style.display='none'; document.getElementById('shop').style.display='flex'; }
+    function closeShop() { document.getElementById('shop').style.display='none'; document.getElementById('home').style.display='flex'; }
     function buyChest() {
-        if(gold < 1000) return alert("Yetersiz Altın! 1000 Altın gerekiyor.");
-        
-        const possible = ["Browny", "Sleapy", "Stary", "Dinory"].filter(p => !unlocked.includes(p));
-        
-        if(possible.length === 0) return alert("Tüm karakterlere zaten sahipsin!");
-
+        if(gold < 1000) return alert("Yetersiz Altın!");
+        const pool = ["Browny", "Sleapy", "Stary", "Dinory"].filter(x => !unlocked.includes(x));
+        if(pool.length === 0) return alert("Tüm karakterler açık!");
         gold -= 1000;
-        const prize = possible[Math.floor(Math.random() * possible.length)];
-        unlocked.push(prize);
-        sync();
-        
-        alert("🎁 KUTUDAN ÇIKAN: " + prize + "!");
-        closeShop();
-    }
-
-    function uiArena() {
-        document.getElementById('selection').style.display = 'none';
-        document.getElementById('arena').style.display = 'flex';
-        document.getElementById('actions').style.display = 'flex';
+        const got = pool[Math.floor(Math.random()*pool.length)];
+        unlocked.push(got); sync();
+        alert("KUTUDAN ÇIKAN: " + got); location.reload();
     }
 </script>
 </body>

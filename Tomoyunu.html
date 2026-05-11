@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arena of Pets: Battle Edition</title>
+    <title>Arena of Pets: Battle Fixed</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
         :root { --accent: #00d2ff; --bg: #121212; --danger: #e84118; --special: #9b59b6; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
         
         #nav { position: fixed; top: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--accent); z-index: 1000; }
@@ -18,7 +18,7 @@
 
         .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; background: var(--bg); padding-top: 60px; }
         
-        .hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 90%; padding: 20px 0; overflow-y: auto; }
+        .hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 90%; padding: 20px; overflow-y: auto; }
         .hero-card { background: #252525; border-radius: 15px; padding: 10px; border: 2px solid #333; text-align: center; }
         .hero-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; }
 
@@ -30,17 +30,14 @@
         .hp-bar { width: 45%; height: 14px; background: #333; border-radius: 7px; overflow: hidden; border: 1px solid #000; }
         .hp-fill { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
 
-        /* Buton Paneli */
         #actions { height: 180px; width: 100%; background: #1a1a1a; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 10px; border-top: 3px solid #333; z-index: 4000; }
         .btn-row { display: flex; width: 100%; gap: 10px; }
-        .btn-game { flex: 1; height: 65px; border-radius: 15px; border: none; font-weight: bold; color: #fff; font-size: 18px; cursor: pointer; transition: 0.1s; }
-        .atk-btn { background: linear-gradient(#ff4757, var(--danger)); box-shadow: 0 5px #800; }
-        .spec-btn { background: linear-gradient(#a29bfe, var(--special)); box-shadow: 0 5px #4b0082; }
-        .btn-game:active { transform: translateY(3px); box-shadow: none; }
-        .btn-game:disabled { background: #444; box-shadow: none; opacity: 0.6; }
+        .btn-game { flex: 1; height: 70px; border-radius: 15px; border: none; font-weight: bold; color: #fff; font-size: 18px; cursor: pointer; }
+        .atk-btn { background: #ff4757; box-shadow: 0 5px #800; }
+        .spec-btn { background: #9b59b6; box-shadow: 0 5px #4b0082; }
+        .btn-game:disabled { background: #444; box-shadow: none; opacity: 0.5; }
 
-        /* Hasar Efekti */
-        .dmg-pop { position: absolute; font-weight: bold; font-size: 24px; color: #ff4757; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 5000; }
+        .dmg-pop { position: absolute; font-weight: bold; font-size: 26px; color: #ff4757; animation: floatUp 0.8s forwards; z-index: 5000; text-shadow: 2px 2px #000; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
         
         .btn-menu { width: 240px; padding: 15px; margin: 8px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
@@ -62,6 +59,7 @@
 </div>
 
 <div id="arena" class="page">
+    <div id="room-id-display" style="position:absolute; top:110px; color:var(--accent); font-weight:bold;"></div>
     <div class="hp-container">
         <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
         <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
@@ -74,8 +72,8 @@
 
 <div id="actions">
     <div class="btn-row">
-        <button class="btn-game atk-btn" onclick="doAttack()">VUR ⚔️</button>
-        <button class="btn-game spec-btn" id="s-btn" onclick="doSpecial()">SÜPER 🌟</button>
+        <button class="btn-game atk-btn" id="atk-b" onclick="doAttack()">VUR ⚔️</button>
+        <button class="btn-game spec-btn" id="s-b" onclick="doSpecial()">SÜPER 🌟</button>
     </div>
 </div>
 
@@ -85,17 +83,17 @@
     const db = firebase.database();
 
     const PETS = {
-        "Sunny": { img: "sunny.jpg", hp: 120, dmg: 10, sName: "Güneş Çarpması", sVal: 25 },
-        "Browny": { img: "browny.jpg", hp: 115, dmg: 12, sName: "Toprak Atak", sVal: 22 },
-        "Pinky": { img: "pinky.jpg", hp: 100, dmg: 14, sName: "Şifa", sVal: 35 },
-        "Sleapy": { img: "sleapy.jpg", hp: 160, dmg: 8, sName: "Ağır Ezme", sVal: 30 },
-        "Dinory": { img: "dinory.jpg", hp: 190, dmg: 7, sName: "Kuyruk Darbesi", sVal: 20 },
-        "Stary": { img: "stary.jpg", hp: 95, dmg: 18, sName: "Yıldız Yağmuru", sVal: 40 }
+        "Sunny": { img: "sunny.jpg", hp: 120, dmg: 10, sVal: 25 },
+        "Browny": { img: "browny.jpg", hp: 115, dmg: 12, sVal: 22 },
+        "Pinky": { img: "pinky.jpg", hp: 100, dmg: 14, sVal: 35 },
+        "Sleapy": { img: "sleapy.jpg", hp: 160, dmg: 8, sVal: 30 },
+        "Dinory": { img: "dinory.jpg", hp: 190, dmg: 7, sVal: 20 },
+        "Stary": { img: "stary.jpg", hp: 95, dmg: 18, sVal: 40 }
     };
 
     let gold = parseInt(localStorage.getItem('pet_gold_v2')) || 0;
     let unlocked = JSON.parse(localStorage.getItem('pet_unl_v2')) || ["Sunny", "Browny"];
-    let myPet, mode, roomID, myRole, isPlaying = false, p1HP, p2HP, m1, m2, canSpecial = true;
+    let myPet, mode, roomID, myRole, isPlaying = false, p1HP, p2HP, m1, m2;
 
     function preStart(m) {
         mode = m;
@@ -108,10 +106,11 @@
         const list = document.getElementById('hero-list');
         list.innerHTML = "";
         Object.keys(PETS).forEach(name => {
+            if(!unlocked.includes(name)) return;
             const card = document.createElement('div');
-            card.className = `hero-card ${!unlocked.includes(name) ? 'locked' : ''}`;
-            card.innerHTML = `<img src="${PETS[name].img}"><div style="color:white; font-size:14px; margin-top:5px;">${name}</div>`;
-            if(unlocked.includes(name)) card.onclick = () => handleGame(name);
+            card.className = 'hero-card';
+            card.innerHTML = `<img src="${PETS[name].img}"><div style="color:white; margin-top:5px;">${name}</div>`;
+            card.onclick = () => handleGame(name);
             list.appendChild(card);
         });
     }
@@ -132,18 +131,20 @@
         document.getElementById('p2-img').src = PETS[enemy].img;
         isPlaying = true;
         updateBars();
-        setInterval(() => { if(isPlaying) { p1HP -= 10; updateBars(); if(p1HP <= 0) finalize(false); } }, 2500);
+        setInterval(() => { if(isPlaying) { p1HP -= 7; updateBars(); if(p1HP <= 0) finalize(false); } }, 3000);
     }
 
     function createRoom() {
         roomID = Math.floor(1000 + Math.random() * 9000);
         myRole = 'p1';
+        document.getElementById('room-id-display').innerText = "ODA: " + roomID;
         db.ref('rooms/' + roomID).set({ p1_hp: PETS[myPet].hp, p1_img: PETS[myPet].img, p2_hp: 0, status: 'waiting' });
         uiArena(); listenRoom();
     }
 
     function joinRoom() {
         roomID = prompt("Oda Kodu:");
+        if(!roomID) return location.reload();
         myRole = 'p2';
         db.ref('rooms/' + roomID).update({ p2_hp: PETS[myPet].hp, p2_img: PETS[myPet].img, status: 'playing' });
         uiArena(); listenRoom();
@@ -152,10 +153,25 @@
     function listenRoom() {
         db.ref('rooms/' + roomID).on('value', snap => {
             const d = snap.val(); if(!d) return;
-            if(myRole === 'p1') { p1HP = d.p1_hp; p2HP = d.p2_hp; m1 = PETS[myPet].hp; m2 = d.p2_img ? PETS[Object.keys(PETS).find(k=>PETS[k].img===d.p2_img)].hp : 100; document.getElementById('p2-img').src = d.p2_img || ""; }
-            else { p1HP = d.p2_hp; p2HP = d.p1_hp; m1 = PETS[myPet].hp; m2 = PETS[Object.keys(PETS).find(k=>PETS[k].img===d.p1_img)].hp; document.getElementById('p2-img').src = d.p1_img; }
+            isPlaying = (d.status === 'playing');
+            document.getElementById('atk-b').disabled = !isPlaying;
+            document.getElementById('s-b').disabled = !isPlaying;
+
+            if(myRole === 'p1') {
+                p1HP = d.p1_hp; p2HP = d.p2_hp;
+                m1 = PETS[myPet].hp; 
+                m2 = d.p2_img ? PETS[Object.keys(PETS).find(k=>PETS[k].img===d.p2_img)].hp : 100;
+                document.getElementById('p2-img').src = d.p2_img || "";
+            } else {
+                p1HP = d.p2_hp; p2HP = d.p1_hp;
+                m1 = PETS[myPet].hp; 
+                m2 = PETS[Object.keys(PETS).find(k=>PETS[k].img===d.p1_img)].hp;
+                document.getElementById('p2-img').src = d.p1_img;
+            }
             document.getElementById('p1-img').src = PETS[myPet].img;
-            updateBars(); isPlaying = (d.status === 'playing');
+            updateBars();
+            if(p1HP <= 0) finalize(false);
+            if(p2HP <= 0 && isPlaying) finalize(true);
         });
     }
 
@@ -163,41 +179,38 @@
         if(!isPlaying) return;
         const dmg = PETS[myPet].dmg + Math.floor(Math.random()*5);
         showDmg(dmg);
-        applyDmg(dmg);
+        applyChange(p2HP - dmg, p1HP);
     }
 
     function doSpecial() {
-        if(!isPlaying || !canSpecial) return;
-        canSpecial = false;
-        const btn = document.getElementById('s-btn');
-        btn.disabled = true;
-        
+        if(!isPlaying) return;
         const sVal = PETS[myPet].sVal;
-        if(myPet === "Pinky") { p1HP = Math.min(m1, p1HP + sVal); alert("ŞİFA KULLANILDI!"); } 
-        else { applyDmg(sVal); alert(PETS[myPet].sName + "!"); }
-        
-        let cd = 10;
-        const timer = setInterval(() => {
-            btn.innerText = cd + "s";
-            cd--;
-            if(cd < 0) { clearInterval(timer); btn.innerText = "SÜPER 🌟"; btn.disabled = false; canSpecial = true; }
-        }, 1000);
+        const sBtn = document.getElementById('s-b');
+        sBtn.disabled = true;
+
+        if(myPet === "Pinky") applyChange(p2HP, Math.min(m1, p1HP + sVal));
+        else applyChange(p2HP - sVal, p1HP);
+
+        setTimeout(() => { if(isPlaying) sBtn.disabled = false; }, 10000);
     }
 
-    function applyDmg(val) {
-        let newHP = p2HP - val;
-        if(mode === 'solo') { p2HP = newHP; updateBars(); if(p2HP <= 0) finalize(true); }
-        else { db.ref('rooms/' + roomID).update({ [(myRole === 'p1' ? 'p2_hp' : 'p1_hp')]: newHP }); }
+    function applyChange(newEHP, newMHP) {
+        if(mode === 'solo') { p2HP = newEHP; p1HP = newMHP; updateBars(); if(p2HP <= 0) finalize(true); }
+        else {
+            const updates = {};
+            if(myRole === 'p1') { updates.p2_hp = newEHP; updates.p1_hp = newMHP; }
+            else { updates.p1_hp = newEHP; updates.p2_hp = newMHP; }
+            db.ref('rooms/' + roomID).update(updates);
+        }
     }
 
     function showDmg(d) {
         const pop = document.createElement('div');
-        pop.className = 'dmg-pop';
-        pop.innerText = "-" + d;
+        pop.className = 'dmg-pop'; pop.innerText = "-" + d;
         pop.style.left = "60%"; pop.style.top = "40%";
         document.body.appendChild(pop);
         setTimeout(() => pop.remove(), 800);
-        document.getElementById('p2-img').style.transform = "scaleX(-1) translateX(-15px)";
+        document.getElementById('p2-img').style.transform = "scaleX(-1) translateX(-20px)";
         setTimeout(() => document.getElementById('p2-img').style.transform = "scaleX(-1)", 100);
     }
 
@@ -217,6 +230,7 @@
         isPlaying = false;
         if(win) { gold += 100; localStorage.setItem('pet_gold_v2', gold); alert("ZAFER! +100 🪙"); }
         else alert("YENİLDİN!");
+        if(roomID && myRole === 'p1') db.ref('rooms/' + roomID).remove();
         location.reload();
     }
 </script>

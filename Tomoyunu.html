@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arena of Pets: Ultimate Battle</title>
+    <title>Arena of Pets: Long Battle</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -18,41 +18,32 @@
 
         .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; background: var(--bg); }
         
-        /* Arena Düzeni */
         #arena { display: none; background: radial-gradient(circle, #2c3e50, #000); z-index: 3000; flex-direction: column; }
         .battle-view { flex: 1; position: relative; width: 100%; display: flex; align-items: center; justify-content: space-around; padding-bottom: 20px; }
-        .char-img { width: 150px; height: 150px; object-fit: contain; transition: 0.1s; z-index: 3001; }
+        .char-img { width: 160px; height: 160px; object-fit: contain; transition: 0.1s; z-index: 3001; }
         
-        .hp-container { position: absolute; top: 80px; width: 90%; display: flex; justify-content: space-between; z-index: 3005; }
-        .hp-bar { width: 45%; height: 16px; background: #333; border-radius: 8px; overflow: hidden; border: 2px solid #000; }
-        .hp-fill { height: 100%; background: #4cd137; width: 100%; transition: 0.3s; }
+        /* Geliştirilmiş Can Barları */
+        .hp-container { position: absolute; top: 85px; width: 92%; display: flex; justify-content: space-between; z-index: 3005; }
+        .hp-wrapper { width: 46%; position: relative; }
+        .hp-bar { height: 22px; background: #222; border-radius: 11px; overflow: hidden; border: 2px solid #555; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .hp-fill { height: 100%; background: linear-gradient(to right, #4cd137, #8cf076); width: 100%; transition: 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        .hp-text { position: absolute; top: -18px; width: 100%; text-align: center; font-size: 11px; font-weight: bold; color: #ccc; }
 
-        /* BUTON PANELİ (Düzeltildi) */
         #actions { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 120px; 
-            background: rgba(26, 26, 26, 0.95); 
-            display: none; /* JavaScript ile açılacak */
-            flex-direction: row; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 15px; 
-            padding: 15px; 
-            border-top: 3px solid #333; 
-            z-index: 6000; /* En üstte durması için */
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 130px; 
+            background: rgba(26, 26, 26, 0.98); display: none; 
+            flex-direction: row; align-items: center; justify-content: center; 
+            gap: 15px; padding: 20px; border-top: 4px solid #333; z-index: 6000; 
         }
-        .btn-game { flex: 1; height: 80px; border-radius: 15px; border: none; font-weight: 900; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); }
-        .atk-btn { background: linear-gradient(#ff4757, var(--danger)); }
-        .spec-btn { background: linear-gradient(#a29bfe, var(--special)); }
+        .btn-game { flex: 1; height: 85px; border-radius: 18px; border: none; font-weight: 900; color: #fff; font-size: 22px; cursor: pointer; text-shadow: 1px 1px 2px #000; }
+        .atk-btn { background: linear-gradient(#ff4757, var(--danger)); box-shadow: 0 6px #800; }
+        .spec-btn { background: linear-gradient(#a29bfe, var(--special)); box-shadow: 0 6px #4b0082; }
         .btn-game:active { transform: translateY(4px); box-shadow: none; }
-        .btn-game:disabled { background: #444 !important; opacity: 0.5; box-shadow: none; }
+        .btn-game:disabled { background: #333 !important; opacity: 0.4; box-shadow: none; }
 
         .btn-menu { width: 260px; padding: 18px; margin: 10px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
         .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; width: 100%; overflow-y: auto; }
-        .hero-card { background: #252525; padding: 10px; border-radius: 15px; text-align: center; border: 2px solid #333; }
+        .hero-card { background: #252525; padding: 10px; border-radius: 15px; text-align: center; border: 2px solid #333; position: relative; }
         .hero-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; }
     </style>
 </head>
@@ -61,11 +52,11 @@
 <div id="nav"><div class="currency">🪙 <span id="gold-txt">0</span></div></div>
 
 <div id="home" class="page">
-    <h1 style="color: var(--accent); margin-bottom: 20px;">ARENA OF PETS</h1>
+    <h1 style="color: var(--accent); margin-bottom: 20px; letter-spacing: 2px;">ARENA OF PETS</h1>
     <button class="btn-menu" style="background:var(--accent);" onclick="preStart('solo')">TEK OYUNCU</button>
     <button class="btn-menu" style="background:var(--special); color:white;" onclick="preStart('create')">ODA KUR</button>
     <button class="btn-menu" style="background:#3498db; color:white;" onclick="preStart('join')">KATIL</button>
-    <button class="btn-menu" style="background:var(--gold);" onclick="openShop()">🏪 DÜKKAN (KUTU)</button>
+    <button class="btn-menu" style="background:var(--gold);" onclick="openShop()">🏪 DÜKKAN (1000 🪙)</button>
 </div>
 
 <div id="shop" class="page" style="display:none;">
@@ -80,10 +71,16 @@
 </div>
 
 <div id="arena" class="page">
-    <div id="room-info" style="position:absolute; top:110px; color:var(--accent); font-weight:bold;"></div>
+    <div id="room-info" style="position:absolute; top:115px; color:var(--accent); font-weight:bold; font-size: 14px;"></div>
     <div class="hp-container">
-        <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
-        <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
+        <div class="hp-wrapper">
+            <div id="hp-txt1" class="hp-text">0 / 0</div>
+            <div class="hp-bar"><div id="hp-p1" class="hp-fill"></div></div>
+        </div>
+        <div class="hp-wrapper">
+            <div id="hp-txt2" class="hp-text">0 / 0</div>
+            <div class="hp-bar"><div id="hp-p2" class="hp-fill"></div></div>
+        </div>
     </div>
     <div class="battle-view">
         <img id="p1-img" class="char-img" src="">
@@ -101,13 +98,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // CAN DEĞERLERİ ARTIRILDI (DAHA UZUN SAVAŞ)
     const PETS = {
-        "Sunny": { img: "sunny.jpg", hp: 120, dmg: 12, sVal: 25 },
-        "Pinky": { img: "pinky.jpg", hp: 110, dmg: 14, sVal: 35 },
-        "Browny": { img: "browny.jpg", hp: 130, dmg: 13, sVal: 22 },
-        "Sleapy": { img: "sleapy.jpg", hp: 180, dmg: 9, sVal: 30 },
-        "Stary": { img: "stary.jpg", hp: 95, dmg: 20, sVal: 45 },
-        "Dinory": { img: "dinory.jpg", hp: 210, dmg: 8, sVal: 25 }
+        "Sunny": { img: "sunny.jpg", hp: 450, dmg: 18, sVal: 65 },
+        "Pinky": { img: "pinky.jpg", hp: 400, dmg: 20, sVal: 100 }, // Pinky şifası da güçlü
+        "Browny": { img: "browny.jpg", hp: 550, dmg: 16, sVal: 60 },
+        "Sleapy": { img: "sleapy.jpg", hp: 750, dmg: 12, sVal: 80 },
+        "Stary": { img: "stary.jpg", hp: 350, dmg: 32, sVal: 120 },
+        "Dinory": { img: "dinory.jpg", hp: 850, dmg: 10, sVal: 70 }
     };
 
     let gold = parseInt(localStorage.getItem('pet_gold_v3')) || 0;
@@ -131,7 +129,7 @@
             if(!unlocked.includes(name)) return;
             const card = document.createElement('div');
             card.className = 'hero-card';
-            card.innerHTML = `<img src="${PETS[name].img}"><p>${name}</p>`;
+            card.innerHTML = `<img src="${PETS[name].img}"><p style="font-weight:bold; margin-top:5px;">${name}</p>`;
             card.onclick = () => {
                 myPet = name;
                 if(mode === 'solo') startSolo();
@@ -145,7 +143,7 @@
     function uiArena() {
         document.getElementById('selection').style.display = 'none';
         document.getElementById('arena').style.display = 'flex';
-        document.getElementById('actions').style.display = 'flex'; // Butonları zorla göster
+        document.getElementById('actions').style.display = 'flex';
     }
 
     function startSolo() {
@@ -158,13 +156,16 @@
         document.getElementById('p2-img').src = PETS[enemy].img;
         isPlaying = true;
         updateBars();
-        setInterval(() => { if(isPlaying) { p1HP -= 9; updateBars(); if(p1HP <= 0) finalize(false); } }, 3000);
+        const bot = setInterval(() => { 
+            if(isPlaying) { p1HP -= (PETS[enemy].dmg - 2); updateBars(); if(p1HP <= 0) finalize(false); } 
+            else clearInterval(bot);
+        }, 2000);
     }
 
     function createRoom() {
         roomID = Math.floor(1000 + Math.random() * 9000);
         myRole = 'p1';
-        document.getElementById('room-info').innerText = "ODA: " + roomID;
+        document.getElementById('room-info').innerText = "ODA KODU: " + roomID;
         db.ref('rooms/' + roomID).set({ p1_hp: PETS[myPet].hp, p1_img: PETS[myPet].img, p2_hp: 0, status: 'waiting' });
         uiArena(); listenRoom();
     }
@@ -181,10 +182,8 @@
         db.ref('rooms/' + roomID).on('value', snap => {
             const d = snap.val(); if(!d) return;
             isPlaying = (d.status === 'playing');
-            
-            // Butonları oyun durumuna göre aktif/pasif yap
             document.getElementById('atk-b').disabled = !isPlaying;
-            document.getElementById('s-b').disabled = !isPlaying;
+            document.getElementById('s-b').disabled = (canSpec === false || !isPlaying);
 
             if(myRole === 'p1') {
                 p1HP = d.p1_hp; p2HP = d.p2_hp;
@@ -206,21 +205,33 @@
 
     function doAttack() {
         if(!isPlaying) return;
-        const dmg = PETS[myPet].dmg + Math.floor(Math.random()*5);
+        const dmg = PETS[myPet].dmg + Math.floor(Math.random()*10);
         applyDmg(p2HP - dmg, p1HP);
-        // Vuruş efekti
-        const e = document.getElementById('p2-img');
-        e.style.filter = "brightness(2) translateX(10px)";
-        setTimeout(()=> e.style.filter="none", 100);
+        shakeEffect();
     }
 
+    let canSpec = true;
     function doSpecial() {
-        if(!isPlaying) return;
+        if(!isPlaying || !canSpec) return;
+        canSpec = false;
         const sVal = PETS[myPet].sVal;
-        document.getElementById('s-b').disabled = true;
+        const sBtn = document.getElementById('s-b');
+        sBtn.disabled = true;
+
         if(myPet === "Pinky") applyDmg(p2HP, Math.min(m1, p1HP + sVal));
         else applyDmg(p2HP - sVal, p1HP);
-        setTimeout(() => { if(isPlaying) document.getElementById('s-b').disabled = false; }, 8000);
+
+        let cd = 12; // 12 saniye bekleme
+        const timer = setInterval(() => {
+            sBtn.innerText = cd + "s";
+            cd--;
+            if(cd < 0) {
+                clearInterval(timer);
+                sBtn.innerText = "SÜPER 🌟";
+                canSpec = true;
+                if(isPlaying) sBtn.disabled = false;
+            }
+        }, 1000);
     }
 
     function applyDmg(newEHP, newMHP) {
@@ -236,11 +247,20 @@
     function updateBars() {
         document.getElementById('hp-p1').style.width = (p1HP/m1*100) + "%";
         document.getElementById('hp-p2').style.width = (p2HP/m2*100) + "%";
+        document.getElementById('hp-txt1').innerText = Math.max(0, Math.floor(p1HP)) + " / " + m1;
+        document.getElementById('hp-txt2').innerText = Math.max(0, Math.floor(p2HP)) + " / " + m2;
+    }
+
+    function shakeEffect() {
+        const e = document.getElementById('p2-img');
+        e.style.transform = "scaleX(-1) translateX(-25px)";
+        e.style.filter = "brightness(2)";
+        setTimeout(()=> { e.style.transform="scaleX(-1)"; e.style.filter="none"; }, 100);
     }
 
     function finalize(win) {
         isPlaying = false;
-        alert(win ? "TEBRİKLER! +100 Altın" : "YENİLDİN!");
+        alert(win ? "ZAFER! 100 Altın Kazandın." : "KAYBETTİN!");
         if(win) { gold += 100; sync(); }
         if(roomID && myRole === 'p1') db.ref('rooms/' + roomID).remove();
         location.reload();
@@ -251,11 +271,11 @@
     function buyChest() {
         if(gold < 1000) return alert("Yetersiz Altın!");
         const pool = ["Browny", "Sleapy", "Stary", "Dinory"].filter(x => !unlocked.includes(x));
-        if(pool.length === 0) return alert("Tüm karakterler açık!");
+        if(pool.length === 0) return alert("Tüm karakterler zaten sende!");
         gold -= 1000;
         const got = pool[Math.floor(Math.random()*pool.length)];
         unlocked.push(got); sync();
-        alert("KUTUDAN ÇIKAN: " + got); location.reload();
+        alert("🎁 KUTUDAN ÇIKAN: " + got); location.reload();
     }
 </script>
 </body>

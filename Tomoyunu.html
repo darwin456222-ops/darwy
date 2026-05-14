@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Arena of Pets: Ultimate Sync</title>
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
@@ -12,7 +12,7 @@
         :root { --accent: #00d2ff; --bg: #121212; --danger: #e84118; --special: #9b59b6; --gold: #fbc531; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
-        
+
         #nav { position: fixed; top: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--accent); z-index: 5000; }
         .currency { font-size: 22px; font-weight: bold; color: var(--gold); }
 
@@ -20,7 +20,7 @@
         #arena { display: none; background: radial-gradient(circle, #2c3e50, #000); z-index: 3000; flex-direction: column; }
         .battle-view { flex: 1; position: relative; width: 100%; display: flex; align-items: center; justify-content: space-around; padding-bottom: 50px; }
         .char-img { width: 160px; height: 160px; object-fit: contain; transition: 0.1s; z-index: 3001; }
-        
+
         .hp-container { position: absolute; top: 85px; width: 92%; display: flex; justify-content: space-between; z-index: 3005; }
         .hp-wrapper { width: 46%; position: relative; }
         .hp-bar { height: 22px; background: #222; border-radius: 11px; overflow: hidden; border: 2px solid #555; }
@@ -89,17 +89,20 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // YEYET DOĞRU ŞEKİLDE EKLENDİ
     const PETS = {
         "Sunny": { img: "sunny.jpg", hp: 450, dmg: 20, sVal: 70 },
         "Pinky": { img: "pinky.jpg", hp: 400, dmg: 22, sVal: 110 },
         "Browny": { img: "browny.jpg", hp: 550, dmg: 18, sVal: 65 },
         "Sleapy": { img: "sleapy.jpg", hp: 750, dmg: 14, sVal: 85 },
         "Stary": { img: "stary.jpg", hp: 350, dmg: 35, sVal: 130 },
-        "Dinory": { img: "dinory.jpg", hp: 850, dmg: 12, sVal: 75 }
+        "Dinory": { img: "dinory.jpg", hp: 850, dmg: 12, sVal: 75 },
+        "Yeyet": { img: "yeyet.jpg", hp: 500, dmg: 28, sVal: 95 }
     };
 
     let gold = parseInt(localStorage.getItem('pet_gold_v3')) || 0;
-    let unlocked = JSON.parse(localStorage.getItem('pet_unl_v3')) || ["Sunny", "Pinky"];
+    // Yeyet başlangıçta açık olan karakterler listesine eklendi
+    let unlocked = JSON.parse(localStorage.getItem('pet_unl_v3')) || ["Sunny", "Pinky", "Yeyet"];
     let myPet, mode, roomID, myRole, isPlaying = false, p1HP, p2HP, m1, m2;
     let isEnding = false;
     let canSpec = true;
@@ -146,11 +149,9 @@
     function listenRoom() {
         db.ref('rooms/' + roomID).on('value', snap => {
             const d = snap.val(); if(!d) return;
-            
-            // Oyun durumu 'finished' ise her şeyi durdur
+
             if(d.status === 'finished' && !isEnding) {
                 isPlaying = false;
-                // Kimin canı bittiyse ona göre finalize et
                 if(myRole === 'p1') finalize(d.p2_hp <= 0);
                 else finalize(d.p1_hp <= 0);
                 return;
@@ -172,14 +173,13 @@
             document.getElementById('p1-img').src = PETS[myPet].img;
             updateBars();
 
-            // Sadece vuran taraf 'finished' tetikleyebilir
             if(isPlaying && p1HP <= 0) { isPlaying = false; db.ref('rooms/' + roomID).update({status: 'finished'}); }
         });
     }
 
     function startSolo() {
         uiArena();
-        const enemy = Object.keys(PETS)[Math.floor(Math.random()*6)];
+        const enemy = Object.keys(PETS)[Math.floor(Math.random()*Object.keys(PETS).length)];
         p1HP = PETS[myPet].hp; m1 = p1HP; p2HP = PETS[enemy].hp; m2 = p2HP;
         document.getElementById('p1-img').src = PETS[myPet].img;
         document.getElementById('p2-img').src = PETS[enemy].img;
@@ -228,7 +228,7 @@
 
     function finalize(win) {
         if(isEnding) return; isEnding = true; isPlaying = false;
-        document.getElementById('actions').style.display = 'none'; // Butonları anında sil
+        document.getElementById('actions').style.display = 'none';
         setTimeout(() => {
             alert(win ? "ZAFER! +100 🪙" : "KAYBETTİN!");
             if(win) { gold += 100; sync(); }
